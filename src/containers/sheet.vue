@@ -10,19 +10,26 @@
                 <div class="count">{{info.count}} 次播放</div>
             </div>
         </div>
+
         <List :data="items"></List>
+
+
     </div>
 
 
 </template>
 <script>
 import { apiSheet } from '../api/qiniu';
+import { mapActions } from 'vuex';
 import List from '../components/songlist.vue'
 import img from '../assets/images/disc/album.png';
 export default  {
 
+
+
     data(){
         return {
+            sid: 1,
             info: {
                 title:'古风歌集 - 大爱古风',
                 img: img,
@@ -30,6 +37,7 @@ export default  {
                 count: 20177,
             },
             items:[],
+            curAid: 0,
         }
     },
 
@@ -37,15 +45,37 @@ export default  {
         List
     },
 
-    mounted(){
-        this.getSheet();
+    created(){
+        let sheet = this.$store.state.sheet;
+        if(sheet.sid!==this.sid){
+            this.getSheet();
+        } else {
+            this.sid = sheet.sid;
+            this.info = sheet.info;
+            this.items = sheet.items;
+        }
+
     },
     
     methods: {
+        ...mapActions([
+            'loadSheet'
+        ]),
+
         getSheet: async function () {
             let res = await apiSheet();
             if(res.ok){
                 this.items = res.data;
+                this.loadSheet({
+                    sid: 1,
+                    info: {
+                        title:'古风歌集 - 大爱古风',
+                        img: img,
+                        tags: ['华语','古风','影视'],
+                        count: 20177,
+                    },
+                    items: res.data,
+                });
             }
         },
 

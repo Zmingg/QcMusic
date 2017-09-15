@@ -20,21 +20,20 @@ export default {
     mounted(){
         this.dpr = window.devicePixelRatio;
         this.init();
-        this.drawDisc();
 
 
     },
 
     destroyed(){
-        this.pause();
+        this.rotatePause();
     },
 
     watch: {
         isPlay: function () {
             if(this.isPlay){
-                this.rotate();
+                this.rotateStart();
             }else{
-                this.pause();
+                this.rotatePause();
             }
         }
     },
@@ -55,17 +54,36 @@ export default {
 
             this.drawLines();
             this.linesImg = disc.toDataURL('image/png');
+
+            this.drawBaseDisc();
+
             this.img_lines = new Image();
             this.img_lines.src = this.linesImg;
+            this.img_lines.onload = ()=>{
+                this.ctx.drawImage(this.img_lines,0,0,disc.width,disc.width);
+            };
             this.img_hlight = new Image();
+            this.img_hlight.onload = this.drawHlight;
             this.img_hlight.src = img_hlight;
             this.img_album = new Image();
+            this.img_album.onload = ()=>{
+                this.drawAlbumBack();
+                this.drawAlbumIco();
+            };
             this.img_album.src = img_album;
-
 
         },
         drawDisc: function () {
             let width = this.$refs.disc.width;
+            let ctx = this.ctx;
+            this.drawBaseDisc();
+            ctx.drawImage(this.img_lines,0,0,width,width);
+            this.drawHlight();
+            this.drawAlbumBack();
+            this.drawAlbumIco();
+
+        },
+        drawBaseDisc: function () {
             let ctx = this.ctx;
             let dpr = this.dpr;
             let r = this.radius;
@@ -83,13 +101,6 @@ export default {
             ctx.arc(R,R,r,0,2*Math.PI);
             ctx.fill();
             ctx.restore();
-
-            ctx.drawImage(this.img_lines,0,0,width,width);
-
-            this.drawHlight();
-            this.drawAlbumBack();
-            this.drawAlbumIco();
-
         },
         drawHlight: function () {
             let width = this.$refs.disc.width;
@@ -157,11 +168,11 @@ export default {
 
         },
 
-        rotate: function () {
+        rotateStart: function () {
             let width = this.$refs.disc.width;
             let R = this.R;
 
-            this.play = setInterval(()=>{
+            this.rotate = setInterval(()=>{
                 this.ctx.clearRect(0,0,width,width);
                 this.ctx.translate(R,R);
                 this.ctx.rotate(Math.PI/180*0.5);
@@ -171,14 +182,17 @@ export default {
 
         },
 
-        pause: function () {
-            clearInterval(this.play);
+        rotatePause: function () {
+            clearInterval(this.rotate);
         }
     }
 }
 
 </script>
 <style scoped>
+* {
+    -webkit-touch-callout: none;
+}
 .main {
     width: 100%;
 }

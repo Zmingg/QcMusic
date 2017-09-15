@@ -12,7 +12,7 @@
             <router-view></router-view>
         </div>
 
-        <audio class="player"></audio>
+        <audio class="player" src=""></audio>
     </div>
 
 </template>
@@ -20,7 +20,7 @@
 export default {
     computed: {
         isHidden: function(){
-            return (this.$route.path==='/player'||'/');
+            return (this.$route.path==='/player');
         }
     },
 
@@ -32,6 +32,7 @@ export default {
     text-decoration: none;
     list-style-type: none;
     color: #000;
+    font-size: 16px;
 }
 
 .nav {

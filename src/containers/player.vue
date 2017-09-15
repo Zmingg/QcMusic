@@ -5,7 +5,7 @@
         </div>
         <div class="bg_shadow"></div>
         <div class="header">
-            <div class="back"></div>
+            <div class="back" @click="back">返回</div>
             <div class="info">
                 <span class="title">{{title}}</span>
                 <span class="singer">{{singer}} - {{disc}}</span>
@@ -28,10 +28,10 @@
                 <span class="fulltime">{{fullTimeStr}}</span>
             </div>
             <div class="control_play">
-                <span class="prev"></span>
+                <span class="prev" @touchend="next"></span>
                 <span class="play" :hidden="isPlay" @click="play"></span>
                 <span class="pause" :hidden="!isPlay" @click="pause"></span>
-                <span class="next"></span>
+                <span class="next" @click="next"></span>
             </div>
         </div>
     </div>
@@ -55,18 +55,20 @@ export default {
             isPlay: false,
             requireLoad: false,
             curTime: 0,
-            fullTime: 999,
+            fullTime: 0,
             progress: 0,
-
+            index:0,
+            total:0,
         }
     },
 
     computed: {
         playRate: function () {
-            return this.curTime/this.fullTime;
+            return this.fullTime===0?0:this.curTime/this.fullTime;
+
         },
         progressRate:function () {
-            return this.progress/this.fullTime;
+            return this.fullTime===0?0:this.progress/this.fullTime;
         },
         curTimeStr: function () {
             return this.secondsToString(this.curTime);
@@ -76,33 +78,16 @@ export default {
         },
     },
 
-    watch: {
-        requireLoad: function () {
-            this.player.src = this.url;
-            this.player.load();
-            this.isPlay = false;
-        }
-    },
-
     created(){
-        this.aid = this.$route.query.aid;
-        let currentAudio = this.$store.state.currentAudio;
-        if(this.$route.query.aid!==currentAudio.aid){
-            this.load();
-        } else {
-            this.title = currentAudio.title;
-            this.singer = currentAudio.singer;
-            this.disc = currentAudio.disc;
-            this.url = currentAudio.url;
-        }
+        this.refresh();
+        let sheet = this.$store.state.sheet;
+        this.index = this.$route.query.index;
+        this.total = sheet.items.length;
+
     },
 
     mounted(){
         this.init();
-        this.isPlay = !this.player.paused||false;
-        this.fullTime = this.player.duration||0;
-        this.curTime = this.player.currentTime||0;
-        this.getProgress();
     },
 
     methods: {
@@ -111,18 +96,16 @@ export default {
         ]),
         init: function () {
             this.player = document.querySelector('.player');
+            this.isPlay = !this.player.paused||false;
+            this.fullTime = this.player.duration||0;
 
             this.player.ondurationchange = ()=>{
                 this.fullTime = this.player.duration;
+                this.getProgress();
             };
             this.player.onprogress=()=>{
                 this.getProgress();
-            };
-            this.player.oncanplay=()=>{
-                this.getProgress();
-            };
-            this.player.oncanplaythrough=()=>{
-                this.play();
+
             };
             this.player.ontimeupdate = ()=>{
                 if(!this.timeRating){
@@ -132,25 +115,65 @@ export default {
 
         },
 
-        load: async function () {
-            let res = await apiAudio(this.aid);
+        refresh: function () {
+            let currentAudio = this.$store.state.currentAudio;
+            this.aid = currentAudio.aid;
+            this.title = currentAudio.title;
+            this.singer = currentAudio.singer;
+            this.disc = currentAudio.disc;
+            this.url = currentAudio.url;
+        },
+
+        load: async function (aid) {
+            let res = await apiAudio(aid);
             if(res.ok){
-                let audio = res.data;
-                this.title = audio.title;
-                this.singer = audio.singer;
-                this.disc = audio.disc;
-                this.url = audio.url;
+                let audioData = res.data;
                 this.$store.dispatch('loadAudio',{
-                    aid: this.aid,
-                    title: this.title,
-                    singer: this.singer,
-                    disc: this.disc,
-                    url: this.url,
+                    aid: audioData.id,
+                    title: audioData.title,
+                    singer: audioData.singer,
+                    disc: audioData.disc,
+                    url: audioData.url,
                 });
-                this.requireLoad = true;
+                this.aid = audioData.aid;
+                this.title = audioData.title;
+                this.singer = audioData.singer;
+                this.disc = audioData.disc;
+                this.url = audioData.url;
+                return audioData.url;
             }
+        },
 
+        next: async function () {
+            this.reset();
+            if(this.index===this.total-1){
+                this.index = 0;
+            }else{
+                this.index++;
+            }
+            let sheet = this.$store.state.sheet;
+            let aid = sheet.items[this.index].id;
+            this.player.src  = await this.load(aid);
+            this.player.load();
+            if(this.isPlay){
+                this.player.play();
+            }
+        },
 
+        prev: async function () {
+            this.reset();
+            if(this.index===0){
+                this.index = this.total-1;
+            }else{
+                this.index--;
+            }
+            let sheet = this.$store.state.sheet;
+            let aid = sheet.items[this.index].id;
+            this.player.src  = await this.load(aid);
+            this.player.load();
+            if(this.isPlay){
+                this.player.play();
+            }
         },
 
         play: function () {
@@ -161,18 +184,19 @@ export default {
             this.player.pause();
             this.isPlay = false;
         },
+        reset: function () {
+            this.player.pause();
+            this.player.currentTime = 0;
+            this.curTime = 0;
+            this.fullTime = 0;
+            this.progress = 0;
+        },
         getProgress: function () {
             let timeRanges = this.player.buffered;
             if(timeRanges.length<1){
                 return;
             }
-//            for(let i=0; i<timeRanges.length;i++){
-//                this.progress[i] = {
-//                    start: timeRanges.start(i),
-//                    end: timeRanges.end(i)
-//                };
-//            }    // audio一般没有分段缓冲
-            this.progress = timeRanges.end(0);
+            this.progress = timeRanges.end(0); // audio一般没有分段缓冲,只需计算第一段
         },
         secondsToString: (seconds)=>{
             let cur_time = Math.round(seconds);
@@ -244,6 +268,10 @@ export default {
             };
             this.$el.addEventListener('touchmove',moveHandle,false);
             this.$el.addEventListener('touchend',finishMove,false);
+        },
+
+        back: function () {
+            this.$router.go(-1);
         }
     }
 
@@ -277,7 +305,8 @@ img {
     z-index: -99;
 }
 .header {
-    width: 100%;
+    /*width: 100%;*/
+    padding: 0 10px;
     height: 50px;
     display: flex;
     justify-content: space-between;
