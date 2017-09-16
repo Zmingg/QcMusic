@@ -1,19 +1,17 @@
 <template>
     <div class="main">
-        <div class="bg_img">
-            <!--<img src="../assets/images/album.jpg"/>-->
-        </div>
+        <canvas class="bg_img"></canvas>
         <div class="bg_shadow"></div>
         <div class="header">
             <div class="back" @click="back">返回</div>
             <div class="info">
                 <span class="title">{{title}}</span>
-                <span class="singer">{{singer}} - {{disc}}</span>
+                <span class="singer">{{singer}} - {{disc.title}}</span>
             </div>
             <div class="share"></div>
         </div>
         <div class="show">
-            <Disc :isPlay="isPlay"></Disc>
+            <Disc :isPlay="isPlay" :img="disc.img"></Disc>
         </div>
         <div class="controls">
             <div class="control_time">
@@ -28,7 +26,7 @@
                 <span class="fulltime">{{fullTimeStr}}</span>
             </div>
             <div class="control_play">
-                <span class="prev" @touchend="next"></span>
+                <span class="prev" @touchend="prev"></span>
                 <span class="play" :hidden="isPlay" @click="play"></span>
                 <span class="pause" :hidden="!isPlay" @click="pause"></span>
                 <span class="next" @click="next"></span>
@@ -38,8 +36,7 @@
 </template>
 <script>
 import Disc from '../components/disc.vue';
-import { apiAudio } from '../api/qiniu';
-import { mapActions } from 'vuex';
+import { mapActions,mapMutations } from 'vuex';
 export default {
     components: {
         Disc,
@@ -50,8 +47,8 @@ export default {
             aid: 0,
             title: '',
             singer: '',
-            disc: '',
-            url:'',
+            disc: { img:'',title:'' },
+            src:'',
             isPlay: false,
             requireLoad: false,
             curTime: 0,
@@ -79,11 +76,9 @@ export default {
     },
 
     created(){
-        this.refresh();
-        let sheet = this.$store.state.sheet;
+        this.refresh(this.$store.state.currentAudio);
         this.index = this.$route.query.index;
-        this.total = sheet.items.length;
-
+        this.total = this.$store.state.currentList.audios.length;
     },
 
     mounted(){
@@ -91,13 +86,17 @@ export default {
     },
 
     methods: {
+        ...mapMutations([
+            'addPlayed'
+        ]),
         ...mapActions([
-            'loadAudio'
+            'loadAudio','loadDisc'
         ]),
         init: function () {
             this.player = document.querySelector('.player');
             this.isPlay = !this.player.paused||false;
             this.fullTime = this.player.duration||0;
+            this.getProgress();
 
             this.player.ondurationchange = ()=>{
                 this.fullTime = this.player.duration;
@@ -105,43 +104,46 @@ export default {
             };
             this.player.onprogress=()=>{
                 this.getProgress();
-
+            };
+            this.player.oncanplaythrough=()=>{
+                this.getProgress();
+                this.addPlayed();
             };
             this.player.ontimeupdate = ()=>{
                 if(!this.timeRating){
                     this.curTime = this.player.currentTime;
                 }
+                if(this.player.ended){
+                    this.next();
+                }
             };
 
         },
 
-        refresh: function () {
-            let currentAudio = this.$store.state.currentAudio;
-            this.aid = currentAudio.aid;
-            this.title = currentAudio.title;
-            this.singer = currentAudio.singer;
-            this.disc = currentAudio.disc;
-            this.url = currentAudio.url;
+        load: async function (aid) {
+            await this.loadAudio(aid);
+            this.refresh(this.$store.state.currentAudio);
         },
 
-        load: async function (aid) {
-            let res = await apiAudio(aid);
-            if(res.ok){
-                let audioData = res.data;
-                this.$store.dispatch('loadAudio',{
-                    aid: audioData.id,
-                    title: audioData.title,
-                    singer: audioData.singer,
-                    disc: audioData.disc,
-                    url: audioData.url,
-                });
-                this.aid = audioData.aid;
-                this.title = audioData.title;
-                this.singer = audioData.singer;
-                this.disc = audioData.disc;
-                this.url = audioData.url;
-                return audioData.url;
-            }
+        refresh: function (audio) {
+            this.aid = audio.aid;
+            this.title = audio.title;
+            this.singer = audio.singer;
+            this.src = audio.src;
+            this.expire = audio.expire;
+            this.changeDisc(audio.disc.sid);
+        },
+
+        changeDisc: async function (sid) {
+            await this.loadDisc(sid);
+            let disc = this.$store.state.currentAudio.disc;
+            this.disc.title = disc.title;
+            let img = new Image();
+            img.onload = ()=>{
+                this.disc.img = disc.img;
+                this.drawBackImg();
+            };
+            img.src = disc.img;
         },
 
         next: async function () {
@@ -151,13 +153,11 @@ export default {
             }else{
                 this.index++;
             }
-            let sheet = this.$store.state.sheet;
-            let aid = sheet.items[this.index].id;
-            this.player.src  = await this.load(aid);
+            let aid = this.$store.state.currentList.audios[this.index].aid;
+            await this.load(aid);
+            this.player.src  = this.src;
             this.player.load();
-            if(this.isPlay){
-                this.player.play();
-            }
+            this.isPlay && this.player.play();
         },
 
         prev: async function () {
@@ -167,13 +167,11 @@ export default {
             }else{
                 this.index--;
             }
-            let sheet = this.$store.state.sheet;
-            let aid = sheet.items[this.index].id;
-            this.player.src  = await this.load(aid);
+            let aid = this.$store.state.currentList.audios[this.index].aid;
+            await this.load(aid);
+            this.player.src  = this.src;
             this.player.load();
-            if(this.isPlay){
-                this.player.play();
-            }
+            this.isPlay && this.player.play();
         },
 
         play: function () {
@@ -261,13 +259,30 @@ export default {
                 e.preventDefault();
                 e.stopPropagation();
                 this.player.currentTime = this.curTime;
-
                 this.timeRating = false;
                 this.$el.removeEventListener('touchmove',moveHandle);
                 this.$el.removeEventListener('touchend',finishMove);
             };
             this.$el.addEventListener('touchmove',moveHandle,false);
             this.$el.addEventListener('touchend',finishMove,false);
+        },
+
+        drawBackImg: function () {
+            let dpr = window.devicePixelRatio;
+            let canvas = document.querySelector('.bg_img');
+            let ctx = canvas.getContext('2d');
+            let win_w = this.$el.clientWidth;
+            let win_h =  this.$el.clientHeight;
+            canvas.width = dpr*win_w;
+            canvas.height = dpr*win_h;
+            let img = new Image();
+            img.onload = ()=>{
+                let img_h = img.height;
+                let img_w = win_w/win_h*img_h;
+                let img_x = (win_h-win_w)/2;
+                ctx.drawImage(img,img_x,0,img_w,img_h,0,0,canvas.width,canvas.height);
+            };
+            img.src = this.disc.img;
         },
 
         back: function () {
@@ -296,6 +311,9 @@ img {
     width: 100%;
     height: 100%;
     z-index: -100;
+    -webkit-filter: blur(10px); /* Chrome, Opera */
+    -ms-filter: blur(10px);
+    filter: blur(10px);
 }
 .bg_shadow {
     position: absolute;

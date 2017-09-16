@@ -5,16 +5,16 @@
             播放全部
         </div>
         <ul class="list" @click="play">
-            <li v-for="(song,index) in data" :data-aid="song.id" :data-index="index">
-                <div class="left" :class="{ current: song.id===currentId }">
+            <li v-for="(audio,index) in audios" :data-aid="audio.aid" :data-index="index">
+                <div class="left" :class="{ current: audio.aid===curAid }">
                     <span class="play-index">{{index}}</span>
                     <!--<span class="play-state"></span>-->
                     <div class="info">
                         <div>
-                            <span class="title">{{song.title}}</span>
+                            <span class="title">{{audio.title}}</span>
                             <span class="icon-q icon-sq"></span>
                         </div>
-                        <a class="txt">{{song.singer}} - {{song.disc}}</a>
+                        <a class="txt">{{audio.singer}} - {{audio.disc.title}}</a>
                     </div>
                 </div>
                     <!--<div class="iconfont icon-mv need-active url" data-url="/mv/692053"></div>-->
@@ -25,20 +25,21 @@
     </div>
 </template>
 <script>
-import { apiAudio } from '../api/qiniu';
+    import 'babel-polyfill';
+import { mapActions } from 'vuex';
 export default{
     props: [
-        'data',
+        'audios',
     ],
 
     data(){
         return {
-            currentId: 0,
+            curAid: 0,
         }
     },
 
     created(){
-        this.currentId = this.$store.state.currentAudio.aid;
+        this.curAid = this.$store.state.currentAudio.aid;
     },
 
     mounted(){
@@ -46,12 +47,16 @@ export default{
     },
     
     methods: {
+        ...mapActions([
+            'loadAudio'
+        ]),
         play: async function (e) {
             if(e.target.tagName==='LI'){
                 let aid = parseInt(e.target.dataset.aid);
-                if(this.currentId!==(aid||0)) {
+                if(this.curAid!==aid) {
                     this.player.load();
-                    this.player.src = await this.load(aid);
+                    await this.loadAudio(aid);
+                    this.player.src = this.$store.state.currentAudio.src;
                     this.player.load();
                     this.player.play();
                 }else{
@@ -59,20 +64,6 @@ export default{
                 }
                 let index = parseInt(e.target.dataset.index);
                 this.$router.push({ path: '/player', query: {index:index}})
-            }
-        },
-        load: async function (aid) {
-            let res = await apiAudio(aid);
-            if(res.ok){
-                let audioData = res.data;
-                this.$store.dispatch('loadAudio',{
-                    aid: audioData.id,
-                    title: audioData.title,
-                    singer: audioData.singer,
-                    disc: audioData.disc,
-                    url: audioData.url,
-                });
-                return audioData.url;
             }
         },
     }

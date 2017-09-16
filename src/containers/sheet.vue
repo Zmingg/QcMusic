@@ -2,16 +2,16 @@
     <div>
         <div class="album_header">
             <div class="pic">
-                <img :src="info.img"/>
+                <img :src="img"/>
             </div>
-            <div class="info"  @click="show">
-                <div class="title">{{info.title}}</div>
-                <div class="tags">{{info.tags}}</div>
-                <div class="count">{{info.count}} 次播放</div>
+            <div class="info">
+                <div class="title">{{title}}</div>
+                <div class="tags">{{tags}}</div>
+                <div class="count">{{count}} 次播放</div>
             </div>
         </div>
 
-        <List :data="items"></List>
+        <List :audios="audios"></List>
 
 
     </div>
@@ -19,24 +19,19 @@
 
 </template>
 <script>
-import { apiSheet } from '../api/qiniu';
-import { mapActions } from 'vuex';
 import List from '../components/songlist.vue'
 import img from '../assets/images/disc/album.png';
+import { mapActions } from 'vuex';
 export default  {
-
-
 
     data(){
         return {
-            sid: 1,
-            info: {
-                title:'古风歌集 - 大爱古风',
-                img: img,
-                tags: ['华语','古风','影视'],
-                count: 20177,
-            },
-            items:[],
+            lid: 1,
+            title:'',
+            img: img,
+            tags: '',
+            count: 0,
+            audios: [],
             curAid: 0,
         }
     },
@@ -46,42 +41,34 @@ export default  {
     },
 
     created(){
-        let sheet = this.$store.state.sheet;
-        if(sheet.sid!==this.sid){
-            this.getSheet();
+        let list = this.$store.state.currentList;
+        if(this.lid!==list.lid){
+            this.getList();
         } else {
-            this.sid = sheet.sid;
-            this.info = sheet.info;
-            this.items = sheet.items;
+            this.refresh();
         }
 
     },
     
     methods: {
         ...mapActions([
-            'loadSheet'
+            'loadList'
         ]),
 
-        getSheet: async function () {
-            let res = await apiSheet();
-            if(res.ok){
-                this.items = res.data;
-                this.loadSheet({
-                    sid: 1,
-                    info: {
-                        title:'古风歌集 - 大爱古风',
-                        img: img,
-                        tags: ['华语','古风','影视'],
-                        count: 20177,
-                    },
-                    items: res.data,
-                });
-            }
+        getList: async function () {
+            await this.loadList(this.lid);
+            this.refresh();
+
         },
 
-        show: function () {
-            console.log(this.items)
-        }
+        refresh: function () {
+            let list = this.$store.state.currentList;
+            this.audios = list.audios;
+            this.title = list.title;
+            this.tags = list.tags;
+            this.count = list.count;
+        },
+
     }
 
 

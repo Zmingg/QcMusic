@@ -4,10 +4,9 @@
     </div>
 </template>
 <script>
-//import img_disc from '../assets/images/disc/disc.png';
 import img_hlight from '../assets/images/disc/hlight.png';
 //import img_light from '../assets/images/disc/light.png';
-import img_album from '../assets/images/disc/album.png';
+//import img_album from '../assets/images/disc/album.png';
 export default {
     data(){
         return {
@@ -15,13 +14,11 @@ export default {
         }
     },
 
-    props: ['isPlay'],
+    props: ['isPlay','img'],
 
     mounted(){
         this.dpr = window.devicePixelRatio;
         this.init();
-
-
     },
 
     destroyed(){
@@ -35,6 +32,13 @@ export default {
             }else{
                 this.rotatePause();
             }
+        },
+        img: function(){
+//            let img = new Image();
+//            img.onload = ()=>{
+            this.img_album.src = this.img;
+//            };
+//            img.src = this.img;
         }
     },
 
@@ -66,11 +70,7 @@ export default {
             this.img_hlight.onload = this.drawHlight;
             this.img_hlight.src = img_hlight;
             this.img_album = new Image();
-            this.img_album.onload = ()=>{
-                this.drawAlbumBack();
-                this.drawAlbumIco();
-            };
-            this.img_album.src = img_album;
+
 
         },
         drawDisc: function () {

@@ -1,10 +1,10 @@
 import 'babel-polyfill';
-const baseUrl = 'http://zmhjy.xyz/';  // http://qc.cc/
-const apiSheet = async ()=>{
+// const baseUrl = 'http://zmhjy.xyz/';
+const baseUrl = 'http://qc.cc/';
+const apiList = async (lid)=>{
     try {
-        let res = await fetch(baseUrl+'mapi/sheet');
+        let res = await fetch(baseUrl+'mapi/list/'+lid);
         let data =  await res.json();
-
         return { ok:true,data:data };
     } catch(err) {
         return { ok:false,err:err };
@@ -14,7 +14,7 @@ const apiSheet = async ()=>{
 const apiAudio = async (aid)=>{
     try {
         let formData = new FormData();
-        formData.append("id",aid);
+        formData.append("aid",aid);
         let res = await fetch(baseUrl+'mapi/audio',{
             method: 'POST',
             body: formData
@@ -26,7 +26,17 @@ const apiAudio = async (aid)=>{
     }
 };
 
+const apiDisc = async (sid)=>{
+    try {
+        let res = await fetch(baseUrl+'mapi/disc/'+sid);
+        let data =  await res.json();
+        return { ok:true,data:data };
+    } catch(err) {
+        return { ok:false,err:err };
+    }
+};
 
 
 
-export { apiSheet,apiAudio } ;
+
+export { apiList,apiAudio,apiDisc } ;
