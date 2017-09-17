@@ -36,7 +36,7 @@
 </template>
 <script>
 import Disc from '../components/disc.vue';
-import { mapActions,mapMutations } from 'vuex';
+import { mapMutations,mapActions } from 'vuex';
 export default {
     components: {
         Disc,
@@ -85,15 +85,23 @@ export default {
         this.init();
     },
 
+    destroyed(){
+        this.player.ondurationchange = null;
+        this.player.onprogress = null;
+        this.player.oncanplaythrough = null;
+        this.player.ontimeupdate = null;
+        this.player.onended = null;
+    },
+
     methods: {
         ...mapMutations([
-            'addPlayed'
+            'playState'
         ]),
         ...mapActions([
-            'loadAudio','loadDisc'
+            'loadAudio','loadDisc','autoMode'
         ]),
         init: function () {
-            this.player = document.querySelector('.player');
+            this.player = document.querySelector('audio');
             this.isPlay = !this.player.paused||false;
             this.fullTime = this.player.duration||0;
             this.getProgress();
@@ -107,16 +115,20 @@ export default {
             };
             this.player.oncanplaythrough=()=>{
                 this.getProgress();
-                this.addPlayed();
             };
             this.player.ontimeupdate = ()=>{
                 if(!this.timeRating){
                     this.curTime = this.player.currentTime;
                 }
-                if(this.player.ended){
-                    this.next();
-                }
             };
+            this.player.onended = async ()=>{
+                await this.autoMode();
+                this.reset();
+                this.refresh(this.$store.state.currentAudio);
+                this.player.src  = this.src;
+                this.player.load();
+                this.player.play();
+            }
 
         },
 
@@ -181,6 +193,7 @@ export default {
         pause: function () {
             this.player.pause();
             this.isPlay = false;
+            this.playState(false);
         },
         reset: function () {
             this.player.pause();
@@ -268,13 +281,13 @@ export default {
         },
 
         drawBackImg: function () {
-            let dpr = window.devicePixelRatio;
+//            let dpr = window.devicePixelRatio;
             let canvas = document.querySelector('.bg_img');
             let ctx = canvas.getContext('2d');
             let win_w = this.$el.clientWidth;
             let win_h =  this.$el.clientHeight;
-            canvas.width = dpr*win_w;
-            canvas.height = dpr*win_h;
+            canvas.width = win_w;
+            canvas.height = win_h;
             let img = new Image();
             img.onload = ()=>{
                 let img_h = img.height;

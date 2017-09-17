@@ -1,6 +1,6 @@
 <template>
     <div>
-        <ul class="nav" :class="{hidden:isHidden}">
+        <ul class="nav" :class="{hidden:isHidden,transparent:isTrans}">
             <li><router-link to="/">QcPlayer</router-link></li>
             <li><router-link to="/cates">分类</router-link></li>
             <li><router-link to="/singers">歌手</router-link></li>
@@ -20,9 +20,19 @@
 export default {
     computed: {
         isHidden: function(){
-            return (this.$route.path==='/player');
+            return (this.$route.path==='/player'||'/');
+        },
+        isTrans: function(){
+            return (this.$route.path==='/search');
         }
+
     },
+
+    mounted(){
+//        if(this.$route.path==='/sheet'){
+//            this.isTrans = true;
+//        }
+    }
 
 }
 
@@ -32,16 +42,24 @@ export default {
     text-decoration: none;
     list-style-type: none;
     color: #000;
-    font-size: 16px;
+    font-size: 15px;
 }
 
 .nav {
-
+    height: 2.4rem;
+    line-height: 2.4rem;
     display: flex;
     justify-content: flex-end;
 }
 .nav li {
-    margin: 10px;
+    margin-right: 1rem;
+}
+
+.transparent {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: transparent;
 }
 
 .hidden {

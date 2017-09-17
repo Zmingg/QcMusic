@@ -34,11 +34,7 @@ export default {
             }
         },
         img: function(){
-//            let img = new Image();
-//            img.onload = ()=>{
             this.img_album.src = this.img;
-//            };
-//            img.src = this.img;
         }
     },
 
@@ -51,7 +47,7 @@ export default {
             disc.style.width = this.$el.clientWidth*0.9+'px';
             disc.style.height = this.$el.clientWidth*0.9+'px';
             disc.style.marginLeft = this.$el.clientWidth*0.05+'px';
-            disc.style.marginTop = this.$el.clientHeight*0.05+'px';
+            disc.style.marginTop = (this.$el.clientHeight-this.$el.clientWidth*0.9-100)/2.5+'px';
             this.R = this.$el.clientWidth*0.45*dpr;
             this.radius = this.$el.clientWidth*0.395*dpr;
             this.ctx = disc.getContext("2d");
@@ -90,14 +86,13 @@ export default {
             let R = this.R;
             ctx.save();
             ctx.beginPath();
-            ctx.fillStyle = 'hsla(0,0%,60%,0.25)';
+            ctx.fillStyle = 'hsla(0,0%,80%,0.3)';
             ctx.shadowBlur=5*dpr;
             ctx.shadowColor="black";
             ctx.arc(R,R,r+15*dpr,0,2*Math.PI);
             ctx.fill();
             ctx.beginPath();
             ctx.fillStyle = '#000';
-
             ctx.arc(R,R,r,0,2*Math.PI);
             ctx.fill();
             ctx.restore();

@@ -7,8 +7,8 @@
         <ul class="list" @click="play">
             <li v-for="(audio,index) in audios" :data-aid="audio.aid" :data-index="index">
                 <div class="left" :class="{ current: audio.aid===curAid }">
-                    <span class="play-index">{{index}}</span>
-                    <!--<span class="play-state"></span>-->
+                    <span v-if="audio.aid===curAid" class="play-state" :class="{active:$store.state.isPlay}"></span>
+                    <span class="play-index" v-else>{{index+1}}</span>
                     <div class="info">
                         <div>
                             <span class="title">{{audio.title}}</span>
@@ -17,8 +17,6 @@
                         <a class="txt">{{audio.singer}} - {{audio.disc.title}}</a>
                     </div>
                 </div>
-                    <!--<div class="iconfont icon-mv need-active url" data-url="/mv/692053"></div>-->
-                    <!--<div class="download iconfont icon-download need-active"></div>-->
             </li>
         </ul>
 
@@ -26,7 +24,7 @@
 </template>
 <script>
     import 'babel-polyfill';
-import { mapActions } from 'vuex';
+import { mapMutations,mapActions } from 'vuex';
 export default{
     props: [
         'audios',
@@ -34,6 +32,9 @@ export default{
 
     data(){
         return {
+            player: {
+                ended: false
+            },
             curAid: 0,
         }
     },
@@ -44,14 +45,30 @@ export default{
 
     mounted(){
         this.player = document.querySelector('audio');
+        this.player.onended = async ()=>{
+            await this.autoMode();
+            let audio = this.$store.state.currentAudio;
+            this.curAid = audio.aid;
+            this.player.src = audio.src;
+            this.player.load();
+            this.player.play();
+        }
     },
-    
+
+    destroyed(){
+        this.player.onended = null;
+    },
+
     methods: {
+        ...mapMutations([
+            'playState','indexState'
+        ]),
         ...mapActions([
-            'loadAudio'
+            'loadAudio','autoMode'
         ]),
         play: async function (e) {
             if(e.target.tagName==='LI'){
+                let index = parseInt(e.target.dataset.index);
                 let aid = parseInt(e.target.dataset.aid);
                 if(this.curAid!==aid) {
                     this.player.load();
@@ -62,7 +79,8 @@ export default{
                 }else{
                     this.player.play();
                 }
-                let index = parseInt(e.target.dataset.index);
+                this.playState(true);
+                this.indexState(index);
                 this.$router.push({ path: '/player', query: {index:index}})
             }
         },
@@ -92,6 +110,7 @@ a, li {
     height: 100%;
     color: #000;
     display: flex;
+    justify-content: space-between;
     align-items: center;
     pointer-events: none;
 }
@@ -99,11 +118,23 @@ a, li {
     color: #ee0000;
 }
 .play-index {
-    width: 1.5rem;
+    width: 28px;
+    margin-right: 2%;
     color: #777777;
+    text-align: center;
+}
+.play-state {
+    width: 28px;
+    height: 20px;
+    margin-right: 2%;
+    font-size: 0;
+    background: url(../assets/images/control.png) no-repeat -30px -180px;
+}
+.active {
+    background: url(../assets/images/control.png) no-repeat 0 -180px;
 }
 .info {
-    width: 90%;
+    width: 93%;
     display: flex;
     flex-direction: column;
     justify-content: center;
