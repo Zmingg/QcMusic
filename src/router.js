@@ -10,6 +10,7 @@ import Player from './containers/player.vue';
 
 export default new VueRouter({
     mode:'history',
+    base: '/music/',
     routes:[
         { path: '/', name: 'home', component: List },
         { path: '/cates', component: Cates },

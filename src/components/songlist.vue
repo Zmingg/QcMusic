@@ -1,7 +1,7 @@
 <template>
     <div class="main">
         <div class="playall">
-            <span class="iconfont icon-play"></span>
+            <span class="icon-play"></span>
             播放全部
         </div>
         <ul class="list" @click="play">
@@ -23,8 +23,9 @@
     </div>
 </template>
 <script>
-    import 'babel-polyfill';
+import 'babel-polyfill';
 import { mapMutations,mapActions } from 'vuex';
+import emptyAu from '../assets/media/empty.mp3';
 export default{
     props: [
         'audios',
@@ -49,10 +50,13 @@ export default{
             await this.autoMode();
             let audio = this.$store.state.currentAudio;
             this.curAid = audio.aid;
+            this.player.src = emptyAu;
+            this.player.load();
             this.player.src = audio.src;
             this.player.load();
             this.player.play();
-        }
+        };
+
     },
 
     destroyed(){
@@ -71,6 +75,7 @@ export default{
                 let index = parseInt(e.target.dataset.index);
                 let aid = parseInt(e.target.dataset.aid);
                 if(this.curAid!==aid) {
+                    this.player.src = emptyAu;
                     this.player.load();
                     await this.loadAudio(aid);
                     this.player.src = this.$store.state.currentAudio.src;
@@ -119,12 +124,14 @@ a, li {
 }
 .play-index {
     width: 28px;
+    min-width: 28px;
     margin-right: 2%;
     color: #777777;
     text-align: center;
 }
 .play-state {
     width: 28px;
+    min-width: 28px;
     height: 20px;
     margin-right: 2%;
     font-size: 0;

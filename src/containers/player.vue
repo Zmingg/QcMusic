@@ -1,18 +1,36 @@
 <template>
     <div class="main">
-        <canvas class="bg_img"></canvas>
-        <div class="bg_shadow"></div>
+        <div class="bg_shadow" :class="{hlight:bg.hlight}"></div>
+        <div class="bg_img" ref="bg">
+            <transition name="fade" @before-leave="beforeLeave" @after-leave="afterLeave">
+                <img :src="backImgUrl"  :key="bg.backImgState"/>
+            </transition>
+        </div>
+
         <div class="header">
             <div class="back" @click="back">返回</div>
             <div class="info">
-                <span class="title">{{title}}</span>
-                <span class="singer">{{singer}} - {{disc.title}}</span>
+                <span class="title">{{audio.title}}</span>
+                <span class="singer">{{audio.singer}} - {{disc.title}}</span>
             </div>
             <div class="share"></div>
         </div>
-        <div class="show">
-            <Disc :isPlay="isPlay" :img="disc.img"></Disc>
+
+        <div class="show" @click="changeView">
+            <transition name="show-fade">
+                <keep-alive>
+                    <div :is="curView"
+                         :isPlay="state.isPlay"
+                         :img="disc.img"
+                         :backImg="backImgUrl"
+                         :isChanging="state.discChanging"
+                         :lyricUrl="audio.lyric"
+                         :darkBack="darkBack">
+                    </div>
+                </keep-alive>
+            </transition>
         </div>
+
         <div class="controls">
             <div class="control_time">
                 <span class="curtime">{{curTimeStr}}</span>
@@ -27,107 +45,121 @@
             </div>
             <div class="control_play">
                 <span class="prev" @touchend="prev"></span>
-                <span class="play" :hidden="isPlay" @click="play"></span>
-                <span class="pause" :hidden="!isPlay" @click="pause"></span>
+                <span class="play" :hidden="state.isPlay" @click="play"></span>
+                <span class="pause" :hidden="!state.isPlay" @click="pause"></span>
                 <span class="next" @click="next"></span>
             </div>
         </div>
     </div>
 </template>
 <script>
+import gaussBlur from '../lib/gaussBlur';
+import smartCrop from '../lib/smartcrop';
 import Disc from '../components/disc.vue';
+import Lyric from '../components/lyric.vue';
 import { mapMutations,mapActions } from 'vuex';
+import defaultBg from '../assets/images/disc_default.jpg';
+
 export default {
     components: {
-        Disc,
+        Disc, Lyric,
     },
 
     data(){
         return {
-            aid: 0,
-            title: '',
-            singer: '',
+            audio: {
+                aid: 0,
+                title: '',
+                singer: '',
+                lyric: '',
+                expire: 0,
+            },
             disc: { img:'',title:'' },
-            src:'',
-            isPlay: false,
-            requireLoad: false,
-            curTime: 0,
-            fullTime: 0,
-            progress: 0,
-            index:0,
-            total:0,
+            state: {
+                isPlay: false,
+                curTime: 0,
+                fullTime: 0,
+                progress: 0,
+                index:0,
+                timeRating: false,
+                discChanging: false,
+                showDisc: true,
+            },
+            bg: {
+                backImgState: 0,
+                backImgs: [defaultBg],
+                hlight: true,
+            },
+            curView: 'disc',
         }
     },
 
     computed: {
+        backImgUrl: function () {
+            return this.bg.backImgs[this.bg.backImgState];
+        },
         playRate: function () {
-            return this.fullTime===0?0:this.curTime/this.fullTime;
-
+            let state = this.state;
+            return state.fullTime===0?0:state.curTime/state.fullTime;
         },
         progressRate:function () {
-            return this.fullTime===0?0:this.progress/this.fullTime;
+            let state = this.state;
+            return state.fullTime===0?0:state.progress/state.fullTime;
         },
         curTimeStr: function () {
-            return this.secondsToString(this.curTime);
+            return this.secondsToString(this.state.curTime);
         },
         fullTimeStr: function () {
-            return this.secondsToString(this.fullTime);
+            return this.secondsToString(this.state.fullTime);
         },
     },
 
     created(){
-        this.refresh(this.$store.state.currentAudio);
-        this.index = this.$route.query.index;
-        this.total = this.$store.state.currentList.audios.length;
+        this.state.index = this.$route.query.index;
     },
 
     mounted(){
         this.init();
+        this.refresh(this.$store.state.currentAudio);
     },
 
     destroyed(){
         this.player.ondurationchange = null;
         this.player.onprogress = null;
-        this.player.oncanplaythrough = null;
         this.player.ontimeupdate = null;
         this.player.onended = null;
     },
 
     methods: {
         ...mapMutations([
-            'playState'
+            'playState','indexState'
         ]),
         ...mapActions([
             'loadAudio','loadDisc','autoMode'
         ]),
         init: function () {
+            let state = this.state;
             this.player = document.querySelector('audio');
-            this.isPlay = !this.player.paused||false;
-            this.fullTime = this.player.duration||0;
+            state.isPlay = !this.player.paused||false;
+            state.fullTime = this.player.duration||0;
             this.getProgress();
-
             this.player.ondurationchange = ()=>{
-                this.fullTime = this.player.duration;
-                this.getProgress();
+                state.fullTime = this.player.duration;
             };
             this.player.onprogress=()=>{
                 this.getProgress();
             };
-            this.player.oncanplaythrough=()=>{
-                this.getProgress();
-            };
             this.player.ontimeupdate = ()=>{
-                if(!this.timeRating){
-                    this.curTime = this.player.currentTime;
+                if(!state.timeRating){
+                    state.curTime = this.player.currentTime;
                 }
             };
             this.player.onended = async ()=>{
                 await this.autoMode();
                 this.reset();
                 this.refresh(this.$store.state.currentAudio);
-                this.player.src  = this.src;
-                this.player.load();
-                this.player.play();
+                this.play();
+
             }
 
         },
@@ -135,14 +167,19 @@ export default {
         load: async function (aid) {
             await this.loadAudio(aid);
             this.refresh(this.$store.state.currentAudio);
+            this.player.src  = this.$store.state.currentAudio.src;
+            this.player.load();
         },
 
         refresh: function (audio) {
-            this.aid = audio.aid;
-            this.title = audio.title;
-            this.singer = audio.singer;
-            this.src = audio.src;
-            this.expire = audio.expire;
+            this.state.index = this.$store.state.curIndex;
+            this.audio = {
+                aid: audio.aid,
+                title: audio.title,
+                singer: audio.singer,
+                lyric: audio.lyric,
+                expire: audio.expire,
+            };
             this.changeDisc(audio.disc.sid);
         },
 
@@ -152,7 +189,7 @@ export default {
             this.disc.title = disc.title;
             let img = new Image();
             img.onload = ()=>{
-                this.disc.img = disc.img;
+                this.disc.img = img.src;
                 this.drawBackImg();
             };
             img.src = disc.img;
@@ -160,54 +197,45 @@ export default {
 
         next: async function () {
             this.reset();
-            if(this.index===this.total-1){
-                this.index = 0;
-            }else{
-                this.index++;
-            }
-            let aid = this.$store.state.currentList.audios[this.index].aid;
+            this.indexState(++this.state.index);
+            let aid = this.$store.state.currentList.audios[this.$store.state.curIndex].aid;
             await this.load(aid);
-            this.player.src  = this.src;
-            this.player.load();
-            this.isPlay && this.player.play();
+            this.state.isPlay && this.player.play();
+
         },
 
         prev: async function () {
             this.reset();
-            if(this.index===0){
-                this.index = this.total-1;
-            }else{
-                this.index--;
-            }
-            let aid = this.$store.state.currentList.audios[this.index].aid;
+            this.indexState(--this.state.index);
+            let aid = this.$store.state.currentList.audios[this.$store.state.curIndex].aid;
             await this.load(aid);
-            this.player.src  = this.src;
-            this.player.load();
-            this.isPlay && this.player.play();
+            this.state.isPlay && this.player.play();
         },
 
         play: function () {
             this.player.play();
-            this.isPlay = true;
+            this.state.isPlay = true;
+            this.playState(true);
         },
         pause: function () {
             this.player.pause();
-            this.isPlay = false;
+            this.state.isPlay = false;
             this.playState(false);
         },
         reset: function () {
+            let state = this.state;
             this.player.pause();
             this.player.currentTime = 0;
-            this.curTime = 0;
-            this.fullTime = 0;
-            this.progress = 0;
+            state.curTime = 0;
+            state.fullTime = 0;
+            state.progress = 0;
         },
         getProgress: function () {
             let timeRanges = this.player.buffered;
             if(timeRanges.length<1){
                 return;
             }
-            this.progress = timeRanges.end(0); // audio一般没有分段缓冲,只需计算第一段
+            this.state.progress = timeRanges.end(0); // audio一般没有分段缓冲,只需计算第一段
         },
         secondsToString: (seconds)=>{
             let cur_time = Math.round(seconds);
@@ -221,11 +249,12 @@ export default {
             if (e.target!==this.$refs.time) {
                 return;
             }
-            this.player.currentTime = (e.clientX-e.target.offsetLeft)/e.target.offsetWidth*this.fullTime;
+            this.player.currentTime = (e.clientX-e.target.offsetLeft)/e.target.offsetWidth*this.state.fullTime;
         },
         timeSlider: function(e){
             e.preventDefault();
-            this.timeRating = true;
+            let state = this.state;
+            state.timeRating = true;
             let handleX = e.offsetX-6;   //修正控制点位置偏差
             let moveHandle = (e)=>{
                 e.preventDefault();
@@ -236,12 +265,12 @@ export default {
                 } else if(durX<0){
                     durX = 0;
                 }
-                this.curTime = this.fullTime*(durX/max);
+                state.curTime = state.fullTime*(durX/max);
             };
             let finishMove = (e)=>{
                 e.preventDefault();
-                this.timeRating = false;
-                this.player.currentTime = this.curTime;
+                state.timeRating = false;
+                this.player.currentTime = state.curTime;
                 this.$el.removeEventListener('mousemove',moveHandle);
                 this.$el.removeEventListener('mouseup',finishMove);
             };
@@ -251,7 +280,8 @@ export default {
         timeSliderTouch: function(e){
             e.preventDefault();
             e.stopPropagation();
-            this.timeRating = true;
+            let state = this.state;
+            state.timeRating = true;
             let ballX = e.target.offsetLeft+6;  //ball初始圆心
             let originX = e.changedTouches[0].pageX;  //初始控制点位置
             let moveHandle = (e)=>{
@@ -266,13 +296,13 @@ export default {
                 } else if(cur < 0){
                     cur = 0;
                 }
-                this.curTime = this.fullTime*(cur/max);
+                state.curTime = state.fullTime*(cur/max);
             };
             let finishMove = (e)=>{
                 e.preventDefault();
                 e.stopPropagation();
-                this.player.currentTime = this.curTime;
-                this.timeRating = false;
+                this.player.currentTime = state.curTime;
+                state.timeRating = false;
                 this.$el.removeEventListener('touchmove',moveHandle);
                 this.$el.removeEventListener('touchend',finishMove);
             };
@@ -281,21 +311,59 @@ export default {
         },
 
         drawBackImg: function () {
-//            let dpr = window.devicePixelRatio;
-            let canvas = document.querySelector('.bg_img');
+            let canvas = document.createElement('canvas');
             let ctx = canvas.getContext('2d');
             let win_w = this.$el.clientWidth;
             let win_h =  this.$el.clientHeight;
             canvas.width = win_w;
             canvas.height = win_h;
             let img = new Image();
+            img.crossOrigin = "Anonymous";
             img.onload = ()=>{
-                let img_h = img.height;
-                let img_w = win_w/win_h*img_h;
-                let img_x = (win_h-win_w)/2;
-                ctx.drawImage(img,img_x,0,img_w,img_h,0,0,canvas.width,canvas.height);
+
+                let _canvas = document.createElement('canvas');
+                _canvas.width = img.width;
+                _canvas.height = img.height;
+                let _ctx = _canvas.getContext('2d');
+                _ctx.drawImage(img, 0, 0, img.width, img.height);
+                let backImgData = _ctx.getImageData(0, 0, img.width, img.width);
+                // 高斯处理
+                let gaussImgData = gaussBlur(backImgData,20,15);
+                _ctx.clearRect(0, 0, img.width, img.height);
+                _ctx.putImageData(gaussImgData, 0, 0);
+                // smartcrop
+                smartCrop.crop(_canvas, {width: win_w, height: win_h}).then((res)=>{
+                    let crop = res.topCrop;
+                    ctx.drawImage(_canvas, crop.x, crop.y, crop.width, crop.height, 0, 0, win_w, win_h);
+                    ctx.fillStyle = 'hsla(0, 0%, 0%, 0.6)';
+                    ctx.fillRect(0, 0, win_w, win_h);
+                    let bg = this.bg;
+                    let img = new Image();
+                    img.onload = ()=>{
+                        bg.backImgs[bg.backImgState+1] = img.src;
+                        bg.backImgState++;
+                    };
+                    img.src = canvas.toDataURL();
+                });
+
             };
             img.src = this.disc.img;
+        },
+
+        darkBack: function () {
+            this.bg.hlight = !this.bg.hlight;
+        },
+
+        changeView: function () {
+            this.curView = (this.curView==='disc')?'lyric':'disc';
+        },
+
+        beforeLeave: function () {
+            this.state.discChanging = true;
+        },
+
+        afterLeave: function () {
+            this.state.discChanging = false;
         },
 
         back: function () {
@@ -303,12 +371,10 @@ export default {
         }
     }
 
-
-
 }
 
 </script>
-<style scoped>
+<style lang="scss" scoped>
 img {
     width: 100%;
     height: 100%;
@@ -319,25 +385,67 @@ img {
     position: fixed;
     -webkit-tap-highlight-color: transparent;
 }
+.bg_shadow {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: hsla(0,0%,100%,0.1);
+    z-index: -99;
+    opacity: 0;
+
+}
+.hlight {
+    opacity: 1;
+}
 .bg_img {
     position: absolute;
     width: 100%;
     height: 100%;
     z-index: -100;
-    -webkit-filter: blur(10px); /* Chrome, Opera */
-    -ms-filter: blur(10px);
-    filter: blur(10px);
+    display: flex;
+    align-items: center;
+
+    img {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+    }
 }
-.bg_shadow {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: rgba(8, 7, 7, 0.65);
-    z-index: -99;
+//  切换背景
+.fade-enter-active, .fade-leave-active {
+    transition: opacity 1s
 }
+.fade-leave-to {
+    opacity: 0;
+    z-index: -100;
+}
+.fade-enter {
+    opacity: 1;
+    z-index: -101;
+}
+.fade-enter-to {
+    opacity: 1;
+    z-index: -101;
+}
+.fade-leave {
+    opacity: 1;
+    z-index: -100;
+}
+//  切换disc/lyric
+.show-fade-enter-active, .show-fade-leave-active {
+    transition: opacity 0.3s;
+}
+.show-fade-enter, .show-fade-leave-to {
+    opacity: 0;
+ }
+/*.show-fade-enter-to, .show-fade-leave {*/
+    /*opacity: 1;*/
+/*}*/
+
+
 .header {
-    /*width: 100%;*/
-    padding: 0 10px;
+    width: 100%;
+    padding: 0 20px;
     height: 50px;
     display: flex;
     justify-content: space-between;
@@ -347,21 +455,28 @@ img {
     font-weight: lighter;
 }
 .back {
-    width: 50px;
+
 }
 .share {
     width: 50px;
 }
 .info {
+    margin-top: 0.5rem;
+    height: 2.5rem;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
 }
 .title {
-    font-size: 1em;
+    font-size: 1rem;
+    line-height: 1.2rem;
+    height: 1.2rem;
 }
 .singer {
-    font-size: 0.5em;
+    font-size: 0.7rem;
+    line-height: 1rem;
+    height: 1rem;
 }
 .controls {
     position: absolute;
@@ -370,8 +485,8 @@ img {
     height: 98px;
 }
 .control_time {
-    height: 18px;
-    margin: 0 15px;
+    height: 1.2rem;
+    margin: 0 1rem;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -399,7 +514,7 @@ img {
     position: absolute;
     top: 8px;
     left: 0;
-    width: 100%;
+    width: 0;
     height: 2px;
     background: rgba(60,60,60,0.9);
     pointer-events: none;
@@ -408,14 +523,14 @@ img {
     position: absolute;
     top: 8px;
     left: 0;
-    width: 50%;
+    width: 0;
     height: 2px;
     background: #ee0000;
     pointer-events: none;
 }
 .time_bar_ball {
     position: absolute;
-    left: 50%;
+    left: 0;
     margin-left: -6px;
     border-color: #ffffff;
     border-style: solid;
@@ -461,7 +576,9 @@ img {
 }
 
 .show {
-    margin: 0 auto;
+    height: calc(100% - 150px);
 }
+
+
 
 </style>

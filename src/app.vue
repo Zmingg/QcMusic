@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div :data-dpr="dpr">
         <ul class="nav" :class="{hidden:isHidden,transparent:isTrans}">
             <li><router-link to="/">QcPlayer</router-link></li>
             <li><router-link to="/cates">分类</router-link></li>
@@ -18,6 +18,12 @@
 </template>
 <script>
 export default {
+    data(){
+        return {
+            dpr: window.devicePixelRatio,
+        }
+    },
+
     computed: {
         isHidden: function(){
             return (this.$route.path==='/player'||'/');
@@ -37,7 +43,7 @@ export default {
 }
 
 </script>
-<style scoped>
+<style lang="scss" scoped>
 * {
     text-decoration: none;
     list-style-type: none;

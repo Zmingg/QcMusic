@@ -1,6 +1,6 @@
 import 'babel-polyfill';
-// const baseUrl = 'http://zmhjy.xyz/';
-const baseUrl = 'http://qc.cc/';
+const baseUrl = 'http://zmhjy.xyz/';
+// const baseUrl = 'http://qc.cc/';
 const apiList = async (lid)=>{
     try {
         let res = await fetch(baseUrl+'mapi/list/'+lid);

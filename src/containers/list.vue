@@ -104,15 +104,11 @@ export default  {
             let ctx = canvas.getContext('2d');
             let img = new Image();
             img.onload = ()=>{
-                if(img.width>width){
-
-                }else{
-                    let img_y = (width-img.height)/2;
-                    let img_h = height/width*img.width;
-                    ctx.drawImage(img,0,img_y,img.width,img_h,0,0,width,height);
-                }
+                let img_h = height/width*img.width;
+                let img_y = (img.width-img_h)/2;
+                ctx.drawImage(img,0,img_y,img.width,img_h,0,0,width,height);
             };
-            img.src = img_album;
+            img.src = this.img;
 
 
         }
@@ -131,34 +127,31 @@ export default  {
         left: 0;
         width: 100%;
         z-index: -99;
-        -webkit-filter: blur(10px);
-        -ms-filter: blur(10px);
-        filter: blur(10px);
+        -webkit-filter: blur(15px);
+        filter: blur(15px);
     }
     .navbar {
         position: absolute;
         top: 0;
-        width: 100%;
-        height: 2.4rem;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        height: 50px;
+        padding: 0 20px;
         color: #fff;
         font-weight: lighter;
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
-    .back {
-        margin-left: 0.6rem;
-        text-align: left;
-    }
-    .nav-title {
 
-    }
     .play-state {
         margin-right: 0.6rem;
         text-align: right;
     }
+
     .album-header {
-        padding-top: 2.4rem;
+        padding-top: 50px;
         width: 100%;
         height: 10rem;
         background: hsla(0,0%,30%,0.5);

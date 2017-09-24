@@ -26,7 +26,7 @@ const Store = new Vuex.Store({
             title:'',
             img: '',
             tags: '',
-            audio:[],
+            audios:[],
             count: 0,
         },
         cache:{
@@ -35,7 +35,7 @@ const Store = new Vuex.Store({
             lists:[],
         },
         curIndex: 0,
-        volume: 100,
+        volume: 50,
         playMode: 0,
         isPlay: false,
     },
@@ -44,7 +44,13 @@ const Store = new Vuex.Store({
             state.isPlay = newState;
         },
         indexState (state,newState) {
-            state.curIndex = newState;
+            if(newState>=state.currentList.audios.length){
+                state.curIndex = 0;
+            } else if(newState<0) {
+                state.curIndex = state.currentList.audios.length-1;
+            } else {
+                state.curIndex = newState;
+            }
         },
         loadAudio (state,audio) {
             state.currentAudio = audio;
