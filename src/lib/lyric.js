@@ -22,6 +22,10 @@ const makeLrcArr = (lrc) => {
             result.push([t[0] * 60 + (+t[1]), value]);
         });
     });
+    let sortRule = (a,b)=>{
+        return a[0]-b[0];
+    };
+    result.sort(sortRule);
     return result;
 };
 

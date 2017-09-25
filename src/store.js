@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 Vue.use(Vuex);
-import { apiAudio,apiList,apiDisc } from './api/qiniu';
+import { apiLists,apiList,apiAudio,apiDisc } from './api/qiniu';
 
 const Store = new Vuex.Store({
     state: {
@@ -35,7 +35,6 @@ const Store = new Vuex.Store({
             lists:[],
         },
         curIndex: 0,
-        volume: 50,
         playMode: 0,
         isPlay: false,
     },
@@ -87,9 +86,23 @@ const Store = new Vuex.Store({
                 }
             }
             audios.unshift(audio);
-        }
+        },
+
     },
     actions: {
+        async loadLists ({ state,dispatch }) {
+            let res = await apiLists();
+            if(res.ok){
+                let lists = res.data;
+                for(let list of lists){
+                    await dispatch('loadList',list.lid);
+                    list.img = state.currentList.img;
+                }
+                return lists;
+            }
+
+
+        },
         async loadAudio ({ commit,state },aid) {
             let time = (new Date()).getTime()/1000;
             for(let audio of state.cache.audios){
@@ -109,7 +122,7 @@ const Store = new Vuex.Store({
         async loadList ({ commit,state },lid) {
             let time = (new Date()).getTime()/1000;
             for(let list of state.cache.lists){
-                if(lid===list.id&&list.expire>time){
+                if(lid===list.lid&&list.expire>time){
                     commit('loadList',list);
                     return;
                 }
@@ -117,23 +130,6 @@ const Store = new Vuex.Store({
             let res = await apiList(lid);
             if(res.ok){
                 let list = res.data;
-                if(list.img===''){
-                    let sid = list.audios[0].disc.sid;
-                    for(let disc of state.cache.discs){
-                        if(sid===disc.sid&&disc.expire>time){
-                            list.img = disc.img;
-                            list.expire = disc.expire;
-                            return;
-                        }
-                    }
-                    let res = await apiDisc(sid);
-                    if(res.ok){
-                        let disc = res.data;
-                        list.img = disc.img;
-                        list.expire = disc.expire;
-                        commit('cacheDisc',disc);
-                    }
-                }
                 commit('loadList',list);
                 commit('cacheList',list);
             }

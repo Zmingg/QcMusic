@@ -1,6 +1,11 @@
 <template>
-  
-    <div style="height: 100%;display: flex;
+    <div style="
+    position: absolute;
+    top: 0;
+    bottom:0;
+    left: 0;
+    right: 0;
+    display: flex;
     justify-content: center;
     align-items: center;">
         <div class="main">
@@ -9,7 +14,7 @@
                     <img src="" ref="lyric_bg">
                 </div>
                 <ul class="lyric" ref="lyric">
-                    <li></li><li v-for="item in lyric">
+                    <li>{{ message }}</li><li v-for="item in lyric">
                         {{ item[1] }}
                     </li>
                 </ul>
@@ -17,7 +22,6 @@
 
         </div>
     </div>
-
 </template>
 <script>
 import Vue from 'vue';
@@ -28,6 +32,12 @@ export default {
         return {
             dpr: window.devicePixelRatio,
             lyric: [],
+        }
+    },
+
+    computed: {
+        message: function () {
+            return (this.lyric.length===0)?'无歌词':'';
         }
     },
 
@@ -44,24 +54,24 @@ export default {
     activated: function () {
         this.darkBack();
         this.syncLrc();
-        let setTran = setTimeout(()=>{
-            this.$refs.lyric.style.transition = '1s';
-            clearTimeout(setTran);
-        },500);
-        this.$refs.lyric_bg.style.display = '';
+        this.$refs.lyric_bg.style.opacity = 1;
     },
 
     deactivated: function () {
-        this.$refs.lyric.style.transition = '0s';
-        this.$refs.lyric_bg.style.display = 'none';
+        this.$refs.lyric_bg.style.opacity = 0;
         this.darkBack();
     },
 
     watch: {
         lyricUrl:function () {
-            getLyric(this.lyricUrl,(res)=>{
-                this.lyric = res;
-            });
+            if(this.lyricUrl!==''){
+                getLyric(this.lyricUrl,(res)=>{
+                    this.lyric = res;
+                });
+            } else {
+                this.lyric = [];
+            }
+
         },
         backImg: function () {
             let img = new Image();
@@ -79,10 +89,12 @@ export default {
     methods: {
         init: function () {
             this.player = document.querySelector('audio');
-            getLyric(this.lyricUrl,(res)=>{
-                this.lyric = res;
-            });
-            this.syncLrc();
+            if(this.lyricUrl!==''){
+                getLyric(this.lyricUrl,(res)=>{
+                    this.lyric = res;
+                });
+            }
+
             if(this.backImg!==''){
                 let img = new Image();
                 img.onload = ()=>{
@@ -90,28 +102,25 @@ export default {
                 };
                 img.src = this.backImg;
             }
-            let setTran = setTimeout(()=>{
-                this.$refs.lyric.style.transition = '1s';
-                clearTimeout(setTran);
-            },500);
+
             this.player.addEventListener('timeupdate',this.syncLrc);
             this.player.addEventListener('seeked',this.seekLrc);
         },
         clipShadow: function (img) {
-            let top = this.$el.clientHeight*0.1+50;
-            let width = this.$refs.lyric_box.clientWidth;
-            let height = this.$refs.lyric_box.clientHeight + 1;
+            let top = Math.ceil(this.$el.clientHeight*0.1)+50;
+            let width = Math.ceil(this.$refs.lyric_box.clientWidth);
+            let height = Math.ceil(this.$refs.lyric_box.clientHeight)+1;
             let canvas = document.createElement('canvas');
             let ctx = canvas.getContext('2d');
             canvas.width = width;
             canvas.height = height;
             ctx.globalAlpha = 1;
-            for(let i = 0; i<=10; i++){
+            for(let i = 0; i<10; i++){
                 ctx.globalAlpha = ctx.globalAlpha-0.1;
                 ctx.drawImage(img,0,top+i*5,width,5,0,i*5,width,5);
             }
             ctx.globalAlpha = 1;
-            for(let i = 0; i<=10; i++){
+            for(let i = 0; i<10; i++){
                 ctx.globalAlpha = ctx.globalAlpha-0.1;
                 ctx.drawImage(img,0,height+top-(i+1)*5,width,5,0,height-(i+1)*5,width,5);
             }
@@ -121,7 +130,6 @@ export default {
         },
 
         syncLrc: function () {
-
             if(this.lyric.length===0) return;
 
             let lyric = this.lyric;
@@ -135,17 +143,22 @@ export default {
             if(id===0) return;
             let ref_lrc = this.$refs.lyric;
             let li_h = 2.5;
-            let topY = li_h*5;
             ref_lrc.childNodes[id-1].className = '';
             ref_lrc.childNodes[id].className = 'on';
-            ref_lrc.style.transform = 'translateY('+(topY-id*li_h)+'rem)';
+            ref_lrc.style.transform = 'translateY('+(-id*li_h)+'rem)';
         },
 
         seekLrc: function () {
+            if(this.lyric.length===0) return;
+
             let ref_lrc = this.$refs.lyric;
             for(let i=1; i<ref_lrc.childNodes.length;i++){
                 ref_lrc.childNodes[i].className = '';
             }
+        },
+
+        clear: function () {
+
         }
 
 
@@ -171,12 +184,17 @@ export default {
     height:100%;
     position: absolute;
     z-index: 1;
+
+    img {
+        transition: 0.3s;
+    }
+
 }
 
 
 .lyric {
     position: absolute;
-    top: 0;
+    top: 45%;
     left: 0;
     right: 0;
     bottom: 0;

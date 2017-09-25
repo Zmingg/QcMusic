@@ -4,7 +4,7 @@
         <div ref="head">
             <canvas class="bg" ref="bg"></canvas>
             <div class="navbar">
-                <div class="back">返回</div>
+                <div class="back" @click="back">返回</div>
                 <div class="nav-title">歌单</div>
                 <div class="play-state">state</div>
             </div>
@@ -31,7 +31,6 @@
 </template>
 <script>
 import List from '../components/songlist.vue'
-import img_album from '../assets/images/disc/album.png';
 import { mapActions } from 'vuex';
 export default  {
 
@@ -52,11 +51,10 @@ export default  {
     },
 
     created(){
-        let list = this.$store.state.currentList;
-        if(list.lid===0){
-            this.lid = 1;
-        }
-        if(this.lid!==list.lid){
+        this.lid = this.$store.state.currentList.lid;
+        let _lid = ~~this.$route.params.lid||this.$store.state.currentList.lid;
+        if(this.lid!==_lid){
+            this.lid = _lid;
             this.getList();
         } else {
             this.refresh();
@@ -80,6 +78,7 @@ export default  {
         },
 
         refresh: function () {
+//            console.log(this.$store.state.currentList)
             let list = this.$store.state.currentList;
             this.audios = list.audios;
             this.title = list.title;
@@ -111,6 +110,10 @@ export default  {
             img.src = this.img;
 
 
+        },
+
+        back: function () {
+            this.$router.go(-1);
         }
     }
 

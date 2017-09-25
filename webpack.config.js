@@ -1,6 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
-const myPubPath = '/';
+const myPubPath = '/music/';
 
 const config = {
     entry: {
@@ -14,7 +14,7 @@ const config = {
     },
     resolve: {
         alias: {
-            'vue$': 'vue/dist/vue.common.js'
+            'vue$': 'vue/dist/vue.min.js'
         }
     },
     module: {
@@ -84,17 +84,16 @@ const config = {
     plugins:[
         new webpack.DefinePlugin({
             PRODUCTION: JSON.stringify(false),
-
         }),
-        // new webpack.optimize.CommonsChunkPlugin({
-        //     names: ['vendor'],
-        //     minChunks: Infinity,
-        // }),
-        // new webpack.optimize.UglifyJsPlugin({
-        //     compress: {
-        //         warnings: false
-        //     }
-        // }),
+        new webpack.optimize.CommonsChunkPlugin({
+            names: ['vendor'],
+            minChunks: Infinity,
+        }),
+        new webpack.optimize.UglifyJsPlugin({
+            compress: {
+                warnings: false
+            }
+        }),
     ],
     devServer: {
         contentBase: path.join(__dirname, "dist"),

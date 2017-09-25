@@ -86,7 +86,7 @@ export default{
                 }
                 this.playState(true);
                 this.indexState(index);
-                this.$router.push({ path: '/player', query: {index:index}})
+                this.$router.push({ name: 'player', params: {index:index}})
             }
         },
     }

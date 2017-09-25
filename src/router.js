@@ -12,12 +12,12 @@ export default new VueRouter({
     mode:'history',
     base: '/music/',
     routes:[
-        { path: '/', name: 'home', component: List },
+        { name: 'home', path: '/', component: Cates },
         { path: '/cates', component: Cates },
         { path: '/singers', component: Singers },
         { path: '/rank', component: Rank },
-        { path: '/list', component: List },
-        { path: '/player', component: Player },
-        { path: '/search', component: List },
+        { name: 'list', path: '/list', component: List },
+        { name: 'player', path: '/player', component: Player },
+        { name: 'search', path: '/search', component: List },
     ]
 });

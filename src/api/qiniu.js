@@ -1,6 +1,16 @@
 import 'babel-polyfill';
 const baseUrl = 'http://zmhjy.xyz/';
 // const baseUrl = 'http://qc.cc/';
+const apiLists = async ()=>{
+    try {
+        let res = await fetch(baseUrl+'mapi/lists');
+        let data =  await res.json();
+        return { ok:true,data:data };
+    } catch(err) {
+        return { ok:false,err:err };
+    }
+};
+
 const apiList = async (lid)=>{
     try {
         let res = await fetch(baseUrl+'mapi/list/'+lid);
@@ -39,4 +49,4 @@ const apiDisc = async (sid)=>{
 
 
 
-export { apiList,apiAudio,apiDisc } ;
+export { apiLists,apiList,apiAudio,apiDisc } ;

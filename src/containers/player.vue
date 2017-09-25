@@ -87,7 +87,7 @@ export default {
             },
             bg: {
                 backImgState: 0,
-                backImgs: [defaultBg],
+                backImgs: [],
                 hlight: true,
             },
             curView: 'disc',
@@ -115,7 +115,8 @@ export default {
     },
 
     created(){
-        this.state.index = this.$route.query.index;
+        this.state.index = ~~this.$route.params.index;
+
     },
 
     mounted(){
@@ -391,6 +392,7 @@ img {
     height: 100%;
     background: hsla(0,0%,100%,0.1);
     z-index: -99;
+    transition: 0.5s;
     opacity: 0;
 
 }
@@ -433,15 +435,11 @@ img {
 }
 //  切换disc/lyric
 .show-fade-enter-active, .show-fade-leave-active {
-    transition: opacity 0.3s;
+    transition: opacity 0.5s;
 }
 .show-fade-enter, .show-fade-leave-to {
     opacity: 0;
  }
-/*.show-fade-enter-to, .show-fade-leave {*/
-    /*opacity: 1;*/
-/*}*/
-
 
 .header {
     width: 100%;
@@ -577,6 +575,8 @@ img {
 
 .show {
     height: calc(100% - 150px);
+    width: 100%;
+    position: relative;
 }
 
 
