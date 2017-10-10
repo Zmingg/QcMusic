@@ -21,7 +21,7 @@
                 <keep-alive>
                     <div :is="curView"
                          :isPlay="state.isPlay"
-                         :img="disc.img"
+                         :img="discImgUrl"
                          :backImg="backImgUrl"
                          :isChanging="state.discChanging"
                          :lyricUrl="audio.lyric"
@@ -44,7 +44,7 @@
                 <span class="fulltime">{{fullTimeStr}}</span>
             </div>
             <div class="control_play">
-                <span class="prev" @touchend="prev"></span>
+                <span class="prev" @click="prev"></span>
                 <span class="play" :hidden="state.isPlay" @click="play"></span>
                 <span class="pause" :hidden="!state.isPlay" @click="pause"></span>
                 <span class="next" @click="next"></span>
@@ -67,13 +67,7 @@ export default {
 
     data(){
         return {
-            audio: {
-                aid: 0,
-                title: '',
-                singer: '',
-                lyric: '',
-                expire: 0,
-            },
+            audio: {},
             disc: { img:'',title:'' },
             state: {
                 isPlay: false,
@@ -95,6 +89,12 @@ export default {
     },
 
     computed: {
+        discImgUrl: function () {
+            let ver = this.$store.state.version;
+            return this.disc.img !== ''
+                ? this.disc.img + '/thumbnail?v=' + ver
+                : '';
+        },
         backImgUrl: function () {
             return this.bg.backImgs[this.bg.backImgState];
         },
@@ -116,7 +116,10 @@ export default {
 
     created(){
         this.state.index = ~~this.$route.params.index;
-
+        if(this.$store.state.currentAudio.aid){
+            this.disc.img = this.$store.state.currentAudio.disc.img;
+            this.bg.backImgs.push(this.disc.img+'/playerbg');
+        }
     },
 
     mounted(){
@@ -128,7 +131,7 @@ export default {
         this.player.ondurationchange = null;
         this.player.onprogress = null;
         this.player.ontimeupdate = null;
-        this.player.onended = null;
+//        this.player.onended = null;
     },
 
     methods: {
@@ -136,7 +139,7 @@ export default {
             'playState','indexState'
         ]),
         ...mapActions([
-            'loadAudio','loadDisc','autoMode'
+            'loadAudio','autoMode'
         ]),
         init: function () {
             let state = this.state;
@@ -144,36 +147,30 @@ export default {
             state.isPlay = !this.player.paused||false;
             state.fullTime = this.player.duration||0;
             this.getProgress();
-            this.player.ondurationchange = ()=>{
+            this.player.ondurationchange = () => {
                 state.fullTime = this.player.duration;
+                this.refresh(this.$store.state.currentAudio);
             };
-            this.player.onprogress=()=>{
+            this.player.onprogress = () => {
                 this.getProgress();
             };
-            this.player.ontimeupdate = ()=>{
+            this.player.ontimeupdate = () => {
                 if(!state.timeRating){
                     state.curTime = this.player.currentTime;
                 }
             };
-            this.player.onended = async ()=>{
-                await this.autoMode();
+            this.player.onended = () => {
                 this.reset();
-                this.refresh(this.$store.state.currentAudio);
-                this.play();
-
-            }
+            };
 
         },
 
         load: async function (aid) {
             await this.loadAudio(aid);
-            this.refresh(this.$store.state.currentAudio);
-            this.player.src  = this.$store.state.currentAudio.src;
             this.player.load();
         },
 
         refresh: function (audio) {
-            this.state.index = this.$store.state.curIndex;
             this.audio = {
                 aid: audio.aid,
                 title: audio.title,
@@ -181,25 +178,17 @@ export default {
                 lyric: audio.lyric,
                 expire: audio.expire,
             };
-            this.changeDisc(audio.disc.sid);
-        },
-
-        changeDisc: async function (sid) {
-            await this.loadDisc(sid);
-            let disc = this.$store.state.currentAudio.disc;
+            let disc = audio.disc;
             this.disc.title = disc.title;
-            let img = new Image();
-            img.onload = ()=>{
-                this.disc.img = img.src;
-                this.drawBackImg();
-            };
-            img.src = disc.img;
+            this.disc.img = disc.img;
+            this.drawBackImg();
         },
 
         next: async function () {
             this.reset();
-            this.indexState(++this.state.index);
-            let aid = this.$store.state.currentList.audios[this.$store.state.curIndex].aid;
+            let list = this.$store.state.currentList;
+            this.indexState(++list.current);
+            let aid = list.audios[list.current].aid;
             await this.load(aid);
             this.state.isPlay && this.player.play();
 
@@ -207,8 +196,9 @@ export default {
 
         prev: async function () {
             this.reset();
-            this.indexState(--this.state.index);
-            let aid = this.$store.state.currentList.audios[this.$store.state.curIndex].aid;
+            let list = this.$store.state.currentList;
+            this.indexState(--list.current);
+            let aid = list.audios[list.current].aid;
             await this.load(aid);
             this.state.isPlay && this.player.play();
         },
@@ -312,6 +302,18 @@ export default {
         },
 
         drawBackImg: function () {
+            let bg = this.bg;
+            let img = new Image();
+            img.onload = ()=>{
+                bg.backImgs[bg.backImgState+1] = img.src;
+                bg.backImgState++;
+            };
+            img.src = this.disc.img+'/playerbg';
+
+        },
+
+/*  模糊背景 已使用Qiniu图片Api替代
+        drawBackImg: function () {
             let canvas = document.createElement('canvas');
             let ctx = canvas.getContext('2d');
             let win_w = this.$el.clientWidth;
@@ -350,6 +352,7 @@ export default {
             };
             img.src = this.disc.img;
         },
+*/
 
         darkBack: function () {
             this.bg.hlight = !this.bg.hlight;
@@ -390,14 +393,14 @@ img {
     position: absolute;
     width: 100%;
     height: 100%;
-    background: hsla(0,0%,100%,0.1);
+    background: hsla(0,0%,0%,0.7);
     z-index: -99;
     transition: 0.5s;
-    opacity: 0;
+    opacity: 1;
 
 }
 .hlight {
-    opacity: 1;
+    opacity: 0.6;
 }
 .bg_img {
     position: absolute;
@@ -452,9 +455,7 @@ img {
     color: #eeeeee;
     font-weight: lighter;
 }
-.back {
 
-}
 .share {
     width: 50px;
 }
@@ -578,7 +579,6 @@ img {
     width: 100%;
     position: relative;
 }
-
 
 
 </style>

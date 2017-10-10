@@ -1,6 +1,7 @@
 import 'babel-polyfill';
 const baseUrl = 'http://zmhjy.xyz/';
 // const baseUrl = 'http://qc.cc/';
+
 const apiLists = async ()=>{
     try {
         let res = await fetch(baseUrl+'mapi/lists');
@@ -24,29 +25,19 @@ const apiList = async (lid)=>{
 const apiAudio = async (aid)=>{
     try {
         let formData = new FormData();
+        let expire = ~~((new Date()).getTime()/1000+3600);
+        formData.append("expire",expire);
         formData.append("aid",aid);
-        let res = await fetch(baseUrl+'mapi/audio',{
+        let res = await fetch( baseUrl + 'mapi/audio', {
             method: 'POST',
             body: formData
         });
         let data =  await res.json();
-        return { ok:true,data:data };
+        return { ok:true, data:data };
     } catch(err) {
-        return { ok:false,err:err };
-    }
-};
-
-const apiDisc = async (sid)=>{
-    try {
-        let res = await fetch(baseUrl+'mapi/disc/'+sid);
-        let data =  await res.json();
-        return { ok:true,data:data };
-    } catch(err) {
-        return { ok:false,err:err };
+        return { ok:false, err:err };
     }
 };
 
 
-
-
-export { apiLists,apiList,apiAudio,apiDisc } ;
+export { apiLists,apiList,apiAudio } ;

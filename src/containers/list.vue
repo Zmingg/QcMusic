@@ -2,7 +2,7 @@
     <div>
 
         <div ref="head">
-            <canvas class="bg" ref="bg"></canvas>
+            <img class="bg" ref="bg" src=""/>
             <div class="navbar">
                 <div class="back" @click="back">返回</div>
                 <div class="nav-title">歌单</div>
@@ -11,7 +11,7 @@
 
             <div class="album-header">
                 <div class="pic">
-                    <img :src="img"/>
+                    <img :src="img && img + '/thumbnail?v=' + $store.state.version"/>
                 </div>
                 <div class="info">
                     <div class="title">{{title}}</div>
@@ -50,7 +50,7 @@ export default  {
         List
     },
 
-    created(){
+    mounted(){
         this.lid = this.$store.state.currentList.lid;
         let _lid = ~~this.$route.params.lid||this.$store.state.currentList.lid;
         if(this.lid!==_lid){
@@ -62,9 +62,6 @@ export default  {
 
     },
 
-    mounted(){
-        this.drawBackImg();
-    },
     
     methods: {
         ...mapActions([
@@ -84,30 +81,28 @@ export default  {
             this.title = list.title;
             this.tags = list.tags;
             this.count = list.count;
-            let img = new Image();
-            img.onload = ()=>{
-                this.img = list.img;
-                this.drawBackImg();
-            };
-            img.src = list.img;
+            this.img = list.img;
+            this.drawBackImg();
+
         },
         
         drawBackImg: function () {
-            let canvas = this.$refs.bg;
+            let bg = this.$refs.bg;
             let width = this.$refs.head.clientWidth;
             let height = this.$refs.head.clientHeight;
-            canvas.width = width;
-            canvas.height = height;
-            canvas.style.width = width+'px';
-            canvas.style.height = height+'px';
-            let ctx = canvas.getContext('2d');
-            let img = new Image();
-            img.onload = ()=>{
-                let img_h = height/width*img.width;
-                let img_y = (img.width-img_h)/2;
-                ctx.drawImage(img,0,img_y,img.width,img_h,0,0,width,height);
-            };
-            img.src = this.img;
+            bg.src = this.img+'/headbg';
+//            canvas.width = width;
+//            canvas.height = height;
+//            canvas.style.width = width+'px';
+//            canvas.style.height = height+'px';
+//            let ctx = canvas.getContext('2d');
+//            let img = new Image();
+//            img.onload = ()=>{
+//                let img_h = height/width*img.width;
+//                let img_y = (img.width-img_h)/2;
+//                ctx.drawImage(img,0,img_y,img.width,img_h,0,0,width,height);
+//            };
+//            img.src = this.img;
 
 
         },
@@ -129,9 +124,8 @@ export default  {
         top: 0;
         left: 0;
         width: 100%;
+        height: calc(10rem + 50px);;
         z-index: -99;
-        -webkit-filter: blur(15px);
-        filter: blur(15px);
     }
     .navbar {
         position: absolute;

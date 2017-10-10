@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 Vue.use(Vuex);
-import { apiLists,apiList,apiAudio,apiDisc } from './api/qiniu';
+import { apiList,apiAudio } from './api/qiniu';
 
 const Store = new Vuex.Store({
     state: {
@@ -16,7 +16,6 @@ const Store = new Vuex.Store({
                 release_time: 0,
                 summary: '',
                 img: '',
-                expire: 0,
             },
             src: '',
             expire: 0,
@@ -28,37 +27,37 @@ const Store = new Vuex.Store({
             tags: '',
             audios:[],
             count: 0,
+            current: 0,
         },
         cache:{
             audios:[],
-            discs:[],
             lists:[],
         },
-        curIndex: 0,
+
         playMode: 0,
         isPlay: false,
+        version: ~~(Math.random()*999999),
     },
     mutations: {
         playState (state,newState) {
             state.isPlay = newState;
         },
         indexState (state,newState) {
-            if(newState>=state.currentList.audios.length){
-                state.curIndex = 0;
-            } else if(newState<0) {
-                state.curIndex = state.currentList.audios.length-1;
+            let list = state.currentList;
+            if(newState >= list.audios.length){
+                list.current = 0;
+            } else if(newState < 0) {
+                list.current = list.audios.length-1;
             } else {
-                state.curIndex = newState;
+                list.current = newState;
             }
+
         },
         loadAudio (state,audio) {
             state.currentAudio = audio;
         },
         loadList (state,list) {
             state.currentList = list;
-        },
-        loadDisc (state,disc) {
-            state.currentAudio.disc = disc;
         },
         cacheList (state,list) {
             let lists = state.cache.lists;
@@ -68,15 +67,6 @@ const Store = new Vuex.Store({
                 }
             }
             lists.unshift(list);
-        },
-        cacheDisc (state,disc) {
-            let discs = state.cache.discs;
-            for(let i in discs){
-                if(discs[i].sid===disc.aid){
-                    discs.splice(i,1);
-                }
-            }
-            discs.unshift(disc);
         },
         cacheAudio (state,audio) {
             let audios = state.cache.audios;
@@ -90,19 +80,7 @@ const Store = new Vuex.Store({
 
     },
     actions: {
-        async loadLists ({ state,dispatch }) {
-            let res = await apiLists();
-            if(res.ok){
-                let lists = res.data;
-                for(let list of lists){
-                    await dispatch('loadList',list.lid);
-                    list.img = state.currentList.img;
-                }
-                return lists;
-            }
 
-
-        },
         async loadAudio ({ commit,state },aid) {
             let time = (new Date()).getTime()/1000;
             for(let audio of state.cache.audios){
@@ -119,14 +97,7 @@ const Store = new Vuex.Store({
             }
 
         },
-        async loadList ({ commit,state },lid) {
-            let time = (new Date()).getTime()/1000;
-            for(let list of state.cache.lists){
-                if(lid===list.lid&&list.expire>time){
-                    commit('loadList',list);
-                    return;
-                }
-            }
+        async loadList ({ commit },lid) {
             let res = await apiList(lid);
             if(res.ok){
                 let list = res.data;
@@ -134,25 +105,11 @@ const Store = new Vuex.Store({
                 commit('cacheList',list);
             }
         },
-        async loadDisc ({ commit,state },sid) {
-            let time = (new Date()).getTime()/1000;
-            for(let disc of state.cache.discs){
-                if(sid===disc.sid&&disc.expire>time){
-                    commit('loadDisc',disc);
-                    return;
-                }
-            }
-            let res = await apiDisc(sid);
-            if(res.ok){
-                let disc = res.data;
-                commit('loadDisc',disc);
-                commit('cacheDisc',disc);
-            }
-        },
+
         async autoMode ({ commit,dispatch,state }){
             let audios = state.currentList.audios;
             let total = audios.length;
-            let index = state.curIndex;
+            let index = state.currentList.current;
             switch (state.playMode){
                 case 1:   // 单曲循环
                 break;
@@ -168,7 +125,7 @@ const Store = new Vuex.Store({
                     }
                 break;
             }
-            let nextAid = audios[state.curIndex].aid;
+            let nextAid = audios[state.currentList.current].aid;
             await dispatch('loadAudio',nextAid);
         }
 

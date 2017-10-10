@@ -78,7 +78,6 @@ export default{
                     this.player.src = emptyAu;
                     this.player.load();
                     await this.loadAudio(aid);
-                    this.player.src = this.$store.state.currentAudio.src;
                     this.player.load();
                     this.player.play();
                 }else{

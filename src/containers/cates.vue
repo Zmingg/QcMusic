@@ -2,15 +2,17 @@
     <div>
         <ul class="lists" @click="goList">
             <li v-for="list in lists" :data-lid="list.lid">
-                <img :src="list.img" />
+                <img :src="list.img + '/thumbnail?v=' + $store.state.version" />
                 <a>{{ list.title }}</a>
             </li>
         </ul>
     </div>
 
 </template>
+
 <script>
 import 'babel-polyfill';
+import { apiLists } from '../api/qiniu';
 import { mapActions } from 'vuex';
 export default {
     data(){
@@ -18,18 +20,19 @@ export default {
             lists: [],
         }
     },
+
     
     mounted(){
         this.getLists();
     },
     
     methods: {
-        ...mapActions([
-            'loadLists'
-        ]),
 
         getLists: async function () {
-            this.lists = await this.loadLists();
+            let res = await apiLists();
+            if(res.ok){
+                this.lists = res.data;
+            }
         },
 
         goList: function (e) {
@@ -45,6 +48,7 @@ export default {
     }
 }
 </script>
+
 <style lang="scss" scoped>
 * {
     margin: 0;

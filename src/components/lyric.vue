@@ -49,6 +49,7 @@ export default {
 
     destroyed(){
         this.player.removeEventListener('timeupdate',this.syncLrc);
+        this.player.removeEventListener('seeked',this.seekLrc);
     },
 
     activated: function () {
@@ -73,13 +74,15 @@ export default {
             }
 
         },
-        backImg: function () {
-            let img = new Image();
-            img.onload = ()=>{
-                this.clipShadow(img);
-            };
-            img.src = this.backImg;
-        },
+
+//        backImg: function () {
+//            let img = new Image();
+//            img.crossOrigin = "anonymous";
+//            img.onload = ()=>{
+//                this.clipShadow(img);
+//            };
+//            img.src = this.backImg;
+//        },
 
         isChanging: function () {
             this.$refs.lyric_bg.style.display =  this.isChanging?'none':'';
@@ -95,18 +98,21 @@ export default {
                 });
             }
 
-            if(this.backImg!==''){
-                let img = new Image();
-                img.onload = ()=>{
-                    this.clipShadow(img);
-                };
-                img.src = this.backImg;
-            }
+//            if(this.backImg!==''){
+//                let img = new Image();
+//                img.crossOrigin = "anonymous";
+//                img.onload = ()=>{
+//                    this.clipShadow(img);
+//                };
+//                img.src = this.backImg;
+//            }
 
             this.player.addEventListener('timeupdate',this.syncLrc);
             this.player.addEventListener('seeked',this.seekLrc);
         },
+
         clipShadow: function (img) {
+
             let top = Math.ceil(this.$el.clientHeight*0.1)+50;
             let width = Math.ceil(this.$refs.lyric_box.clientWidth);
             let height = Math.ceil(this.$refs.lyric_box.clientHeight)+1;
@@ -114,18 +120,28 @@ export default {
             let ctx = canvas.getContext('2d');
             canvas.width = width;
             canvas.height = height;
+            let full = document.createElement('canvas');
+            full.width = window.screen.width;
+            full.height = window.screen.height;
+            let _ctx = full.getContext('2d');
+            _ctx.drawImage(img,0,0,window.screen.width,window.screen.height);
+            _ctx.fillStyle = "hsla(0,0%,0%,0.7)";
+            _ctx.fillRect(0,0,window.screen.width,window.screen.height);
+
             ctx.globalAlpha = 1;
             for(let i = 0; i<10; i++){
+                ctx.drawImage(full,0,top+i*5,width,5,0,i*5,width,5);
                 ctx.globalAlpha = ctx.globalAlpha-0.1;
-                ctx.drawImage(img,0,top+i*5,width,5,0,i*5,width,5);
             }
             ctx.globalAlpha = 1;
             for(let i = 0; i<10; i++){
+                ctx.drawImage(full,0,height+top-(i+1)*5,width,5,0,height-(i+1)*5,width,5);
                 ctx.globalAlpha = ctx.globalAlpha-0.1;
-                ctx.drawImage(img,0,height+top-(i+1)*5,width,5,0,height-(i+1)*5,width,5);
             }
 
+
             this.$refs.lyric_bg.src = canvas.toDataURL();
+
 
         },
 
@@ -152,14 +168,11 @@ export default {
             if(this.lyric.length===0) return;
 
             let ref_lrc = this.$refs.lyric;
-            for(let i=1; i<ref_lrc.childNodes.length;i++){
+            for(let i = 1; i < ref_lrc.length; i++){
                 ref_lrc.childNodes[i].className = '';
             }
         },
 
-        clear: function () {
-
-        }
 
 
     }

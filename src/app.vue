@@ -12,11 +12,12 @@
             <router-view></router-view>
         </div>
 
-        <audio class="player" src=""></audio>
+        <audio class="player" :src="this.$store.state.currentAudio.src"></audio>
     </div>
 
 </template>
 <script>
+import { mapActions } from 'vuex';
 export default {
     data(){
         return {
@@ -30,10 +31,33 @@ export default {
             if(route==='player'||route==='list'){
                 return true;
             }
-        },
+        }
+    },
 
+    mounted(){
+        this.player = document.querySelector('audio');
+
+        this.player.addEventListener('ended',this.endEvent);
 
     },
+
+    methods: {
+
+        ...mapActions([
+            'autoMode'
+        ]),
+
+        endEvent: function () {
+            this.autoMode().then(()=>{
+                this.player.src = this.$store.state.currentAudio.src;
+                this.player.load();
+                this.player.play();
+            });
+
+        }
+    }
+
+
 
 
 }
