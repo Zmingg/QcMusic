@@ -6,8 +6,8 @@
         </div>
         <ul class="list" @click="play">
             <li v-for="(audio,index) in audios" :data-aid="audio.aid" :data-index="index">
-                <div class="left" :class="{ current: audio.aid===curAid }">
-                    <span v-if="audio.aid===curAid" class="play-state" :class="{active:$store.state.isPlay}"></span>
+                <div class="left" :class="{ current: isPlay && (index === curIndex) }">
+                    <span v-if="isPlay && (index === curIndex)" class="play-state" :class="{active:$store.state.isPlay}"></span>
                     <span class="play-index" v-else>{{index+1}}</span>
                     <div class="info">
                         <div>
@@ -28,59 +28,50 @@ import { mapMutations,mapActions } from 'vuex';
 import emptyAu from '../assets/media/empty.mp3';
 export default{
     props: [
-        'audios',
+        'audios','playList','isPlay'
     ],
 
     data(){
         return {
-            player: {
-                ended: false
-            },
-            curAid: 0,
+            curIndex: -1,
         }
     },
 
     created(){
-        this.curAid = this.$store.state.currentAudio.aid;
+        this.curIndex = this.$store.state.currentList.current;
     },
 
     mounted(){
         this.player = document.querySelector('audio');
-        this.player.onended = async ()=>{
-            await this.autoMode();
-            let audio = this.$store.state.currentAudio;
-            this.curAid = audio.aid;
-            this.player.src = emptyAu;
-            this.player.load();
-            this.player.src = audio.src;
-            this.player.load();
-            this.player.play();
+        this.player.ondurationchange = ()=>{
+            this.curIndex = this.$store.state.currentList.current;
         };
 
     },
 
     destroyed(){
-        this.player.onended = null;
+        this.player.ondurationchange = null;
     },
 
     methods: {
         ...mapMutations([
-            'playState','indexState'
+            'loadList','playState','indexState'
         ]),
         ...mapActions([
             'loadAudio','autoMode'
         ]),
         play: async function (e) {
             if(e.target.tagName==='LI'){
+                this.playList();
                 let index = parseInt(e.target.dataset.index);
                 let aid = parseInt(e.target.dataset.aid);
-                if(this.curAid!==aid) {
+                if(this.isPlay && (this.curIndex === index)) {
+                    this.player.play();
+                }else{
                     this.player.src = emptyAu;
                     this.player.load();
                     await this.loadAudio(aid);
                     this.player.load();
-                    this.player.play();
-                }else{
                     this.player.play();
                 }
                 this.playState(true);

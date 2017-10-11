@@ -2,27 +2,30 @@
     <div>
 
         <div ref="head">
-            <img class="bg" ref="bg" src=""/>
+            <img class="bg" ref="bg" :src="bg"/>
             <div class="navbar">
                 <div class="back" @click="back">返回</div>
                 <div class="nav-title">歌单</div>
-                <div class="play-state">state</div>
+                <div class="play-state" @click="goPlayer">
+                    <PlayState></PlayState>
+                </div>
+
             </div>
 
             <div class="album-header">
                 <div class="pic">
-                    <img :src="img && img + '/thumbnail?v=' + $store.state.version"/>
+                    <img :src="thumb"/>
                 </div>
                 <div class="info">
-                    <div class="title">{{title}}</div>
-                    <div class="tags">{{tags}}</div>
-                    <div class="count">{{count}} 次播放</div>
+                    <div class="title">{{ list.title }}</div>
+                    <div class="tags">{{ list.tags }}</div>
+                    <div class="count">{{ list.count }} 次播放</div>
                 </div>
             </div>
         </div>
 
 
-        <List :audios="audios"></List>
+        <List :isPlay="isPlay" :audios="list.audios" :playList="play"></List>
 
 
     </div>
@@ -30,81 +33,61 @@
 
 </template>
 <script>
-import List from '../components/songlist.vue'
-import { mapActions } from 'vuex';
+import List from '../components/songlist.vue';
+import PlayState from '../components/playstate.vue';
+import { mapMutations,mapActions } from 'vuex';
 export default  {
+    components: {
+        List,PlayState
+    },
 
     data(){
         return {
-            lid: 1,
-            title:'',
-            img: '',
-            tags: '',
-            count: 0,
-            audios: [],
-            curAid: 0,
+            list: {},
+            isPlay: false,
         }
     },
 
-    components: {
-        List
+    computed: {
+        bg: function () {
+            return (this.list.img && this.list.img+'/headbg');
+        },
+        thumb: function () {
+            return (this.list.img && this.list.img+'/thumb?v=' + this.$store.state.version);
+        }
     },
 
     mounted(){
-        this.lid = this.$store.state.currentList.lid;
-        let _lid = ~~this.$route.params.lid||this.$store.state.currentList.lid;
-        if(this.lid!==_lid){
-            this.lid = _lid;
-            this.getList();
-        } else {
-            this.refresh();
-        }
-
+        this.getList();
+        this.isPlay = (this.list.lid === this.$store.state.currentList.lid);
     },
 
     
     methods: {
+        ...mapMutations([
+            'playList'
+        ]),
         ...mapActions([
             'loadList'
         ]),
 
         getList: async function () {
-            await this.loadList(this.lid);
-            this.refresh();
+            if(!this.$route.params.lid){
+                this.list = this.$store.state.cache.lists[0];
+            } else {
+                this.list.lid = ~~this.$route.params.lid;
+                this.list = await this.loadList(this.list.lid);
+            }
 
         },
 
-        refresh: function () {
-//            console.log(this.$store.state.currentList)
-            let list = this.$store.state.currentList;
-            this.audios = list.audios;
-            this.title = list.title;
-            this.tags = list.tags;
-            this.count = list.count;
-            this.img = list.img;
-            this.drawBackImg();
+        play: function () {
+            this.playList(this.list);
 
         },
-        
-        drawBackImg: function () {
-            let bg = this.$refs.bg;
-            let width = this.$refs.head.clientWidth;
-            let height = this.$refs.head.clientHeight;
-            bg.src = this.img+'/headbg';
-//            canvas.width = width;
-//            canvas.height = height;
-//            canvas.style.width = width+'px';
-//            canvas.style.height = height+'px';
-//            let ctx = canvas.getContext('2d');
-//            let img = new Image();
-//            img.onload = ()=>{
-//                let img_h = height/width*img.width;
-//                let img_y = (img.width-img_h)/2;
-//                ctx.drawImage(img,0,img_y,img.width,img_h,0,0,width,height);
-//            };
-//            img.src = this.img;
 
-
+        goPlayer: function () {
+            this.$router.push({ name: 'player' })
         },
 
         back: function () {
@@ -143,8 +126,8 @@ export default  {
     }
 
     .play-state {
-        margin-right: 0.6rem;
-        text-align: right;
+        width: 1.2em;
+        height: 1.2em;
     }
 
     .album-header {

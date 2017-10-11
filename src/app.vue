@@ -18,6 +18,7 @@
 </template>
 <script>
 import { mapActions } from 'vuex';
+import emptyAu from './assets/media/empty.mp3';
 export default {
     data(){
         return {

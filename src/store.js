@@ -27,7 +27,7 @@ const Store = new Vuex.Store({
             tags: '',
             audios:[],
             count: 0,
-            current: 0,
+            current: -1,
         },
         cache:{
             audios:[],
@@ -56,7 +56,7 @@ const Store = new Vuex.Store({
         loadAudio (state,audio) {
             state.currentAudio = audio;
         },
-        loadList (state,list) {
+        playList (state,list) {
             state.currentList = list;
         },
         cacheList (state,list) {
@@ -81,6 +81,22 @@ const Store = new Vuex.Store({
     },
     actions: {
 
+        async loadList ({ commit,state },lid) {
+            for(let list of state.cache.lists){
+                if(lid === list.lid){
+                    commit('cacheList',list);
+                    return list;
+                }
+            }
+            let res = await apiList(lid);
+            if(res.ok){
+                let list = res.data;
+                commit('cacheList',list);
+                return list;
+            }
+
+        },
+
         async loadAudio ({ commit,state },aid) {
             let time = (new Date()).getTime()/1000;
             for(let audio of state.cache.audios){
@@ -96,14 +112,6 @@ const Store = new Vuex.Store({
                 commit('cacheAudio',audio);
             }
 
-        },
-        async loadList ({ commit },lid) {
-            let res = await apiList(lid);
-            if(res.ok){
-                let list = res.data;
-                commit('loadList',list);
-                commit('cacheList',list);
-            }
         },
 
         async autoMode ({ commit,dispatch,state }){
@@ -126,6 +134,7 @@ const Store = new Vuex.Store({
                 break;
             }
             let nextAid = audios[state.currentList.current].aid;
+
             await dispatch('loadAudio',nextAid);
         }
 

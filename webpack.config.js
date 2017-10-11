@@ -1,6 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
-const myPubPath = '/music/';
+const myPubPath = '/';
 
 const config = {
     entry: {

@@ -131,7 +131,7 @@ export default {
         this.player.ondurationchange = null;
         this.player.onprogress = null;
         this.player.ontimeupdate = null;
-//        this.player.onended = null;
+        this.player.onended = null;
     },
 
     methods: {
@@ -215,7 +215,7 @@ export default {
         },
         reset: function () {
             let state = this.state;
-            this.player.pause();
+//            this.player.pause();
             this.player.currentTime = 0;
             state.curTime = 0;
             state.fullTime = 0;
