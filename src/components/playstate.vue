@@ -1,5 +1,5 @@
 <template>
-    <svg viewBox="0 0 80 80">
+    <svg viewBox="0 0 80 80" >
         <line :class="{paused:!isPlay}" x1="10" y1="80" x2="10" y2="0" ></line>
         <line :class="{paused:!isPlay}" x1="40" y1="80" x2="40" y2="0" ></line>
         <line :class="{paused:!isPlay}" x1="70" y1="80" x2="70" y2="0" ></line>
@@ -11,7 +11,7 @@ export default {
 
     computed: {
         isPlay: function () {
-            return this.$store.state.isPlay;
+            return this.$store.state.player.isPlay;
         }
     },
 

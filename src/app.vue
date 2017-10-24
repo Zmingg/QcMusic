@@ -8,18 +8,20 @@
             <!--<li><router-link to="/search">搜索</router-link></li>-->
         </ul>
 
-        <div>
-            <router-view></router-view>
-        </div>
 
-        <audio class="player" :src="this.$store.state.currentAudio.src"></audio>
+        <router-view></router-view>
+
+        <Player></Player>
+
     </div>
 
 </template>
 <script>
-import { mapActions } from 'vuex';
-import emptyAu from './assets/media/empty.mp3';
+import Player from './components/player.vue';
 export default {
+    components: {
+        Player
+    },
     data(){
         return {
             dpr: window.devicePixelRatio,
@@ -29,34 +31,12 @@ export default {
     computed: {
         isHidden: function(){
             let route = this.$route.name
-            if(route==='player'||route==='list'){
+            if(route==='audio'||route==='list'){
                 return true;
             }
         }
     },
 
-    mounted(){
-        this.player = document.querySelector('audio');
-
-        this.player.addEventListener('ended',this.endEvent);
-
-    },
-
-    methods: {
-
-        ...mapActions([
-            'autoMode'
-        ]),
-
-        endEvent: function () {
-            this.autoMode().then(()=>{
-                this.player.src = this.$store.state.currentAudio.src;
-                this.player.load();
-                this.player.play();
-            });
-
-        }
-    }
 
 
 

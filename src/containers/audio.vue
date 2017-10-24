@@ -2,7 +2,7 @@
     <div class="main">
         <div class="bg_shadow" :class="{hlight:bg.hlight}"></div>
         <div class="bg_img" ref="bg">
-            <transition name="fade" @before-leave="beforeLeave" @after-leave="afterLeave">
+            <transition name="fade" >
                 <img :src="backImgUrl"  :key="bg.backImgState"/>
             </transition>
         </div>
@@ -10,8 +10,8 @@
         <div class="header">
             <div class="back" @click="back">返回</div>
             <div class="info">
-                <span class="title">{{audio.title}}</span>
-                <span class="singer">{{audio.singer}} - {{disc.title}}</span>
+                <span class="title">{{ audio.title }}</span>
+                <span class="singer">{{ audio.singer }} - {{ audio.disc.title }}</span>
             </div>
             <div class="share"></div>
         </div>
@@ -20,10 +20,9 @@
             <transition name="show-fade">
                 <keep-alive>
                     <div :is="curView"
-                         :isPlay="state.isPlay"
+                         :isPlay="isPlay"
                          :img="discImgUrl"
                          :backImg="backImgUrl"
-                         :isChanging="state.discChanging"
                          :lyricUrl="audio.lyric"
                          :darkBack="darkBack">
                     </div>
@@ -41,12 +40,12 @@
                     <div class="time_bar_ball" :style="{left:playRate*100+'%'}"
                          @mousedown="timeSlider" @touchstart="timeSliderTouch"></div>
                 </div>
-                <span class="fulltime">{{fullTimeStr}}</span>
+                <span class="fulltime">{{ fullTimeStr }}</span>
             </div>
             <div class="control_play">
                 <span class="prev" @click="prev"></span>
-                <span class="play" :hidden="state.isPlay" @click="play"></span>
-                <span class="pause" :hidden="!state.isPlay" @click="pause"></span>
+                <span class="play" @click="play" v-if="!isPlay"></span>
+                <span class="pause" @click="play" v-else></span>
                 <span class="next" @click="next"></span>
             </div>
         </div>
@@ -55,29 +54,21 @@
 <script>
 import gaussBlur from '../lib/gaussBlur';
 import smartCrop from '../lib/smartcrop';
-import Disc from '../components/disc.vue';
+//import Disc from '../components/disc.vue';
 import Lyric from '../components/lyric.vue';
-import { mapMutations,mapActions } from 'vuex';
+import { mapState,mapGetters,mapMutations,mapActions } from 'vuex';
 import defaultBg from '../assets/images/disc_default.jpg';
-
+import Disc from '../components/disc.vue';
 export default {
     components: {
-        Disc, Lyric,
+        Disc, Lyric
     },
 
     data(){
         return {
-            audio: {},
-            disc: { img:'',title:'' },
             state: {
-                isPlay: false,
-                curTime: 0,
-                fullTime: 0,
-                progress: 0,
                 index:0,
-                timeRating: false,
                 discChanging: false,
-                showDisc: true,
             },
             bg: {
                 backImgState: 0,
@@ -89,190 +80,128 @@ export default {
     },
 
     computed: {
+        ...mapState({
+            fullTime: state => state.player.fullTime,
+            curTime: state => state.player.curTime,
+            isPlay: state => state.player.isPlay,
+            audio: state => state.current.audio,
+        }),
+
+        ...mapGetters({
+            fullTimeStr: 'player/fullTime',
+            curTimeStr: 'player/curTime',
+        }),
+
         discImgUrl: function () {
             let ver = this.$store.state.version;
-            return this.disc.img !== ''
-                ? this.disc.img + '/thumbnail?v=' + ver
+            return this.audio.disc.img !== ''
+                ? this.audio.disc.img + '/thumbnail?v=qc' + ver
                 : '';
         },
+
         backImgUrl: function () {
             return this.bg.backImgs[this.bg.backImgState];
         },
+
         playRate: function () {
-            let state = this.state;
-            return state.fullTime===0?0:state.curTime/state.fullTime;
+            if (this.fullTime === 0) {
+                return 0;
+            }
+            return this.curTime/this.fullTime;
         },
+
         progressRate:function () {
-            let state = this.state;
-            return state.fullTime===0?0:state.progress/state.fullTime;
-        },
-        curTimeStr: function () {
-            return this.secondsToString(this.state.curTime);
-        },
-        fullTimeStr: function () {
-            return this.secondsToString(this.state.fullTime);
+            return this.fullTime === 0
+                ? 0
+                : this.$store.state.player.progress/this.fullTime;
         },
     },
 
-    created(){
-        this.state.index = ~~this.$route.params.index;
-        if(this.$store.state.currentAudio.aid){
-            this.disc.img = this.$store.state.currentAudio.disc.img;
-            this.bg.backImgs.push(this.disc.img+'/playerbg');
+    watch: {
+        ['audio.aid']: function () {
+            this.drawBackImg();
         }
     },
 
-    mounted(){
-        this.init();
-        this.refresh(this.$store.state.currentAudio);
-    },
-
-    destroyed(){
-        this.player.ondurationchange = null;
-        this.player.onprogress = null;
-        this.player.ontimeupdate = null;
-        this.player.onended = null;
+    created(){
+        if(this.$store.state.current.audio.aid){
+            this.drawBackImg();
+        }
     },
 
     methods: {
-        ...mapMutations([
-            'playState','indexState'
-        ]),
-        ...mapActions([
-            'loadAudio','autoMode'
-        ]),
-        init: function () {
-            let state = this.state;
-            this.player = document.querySelector('audio');
-            state.isPlay = !this.player.paused||false;
-            state.fullTime = this.player.duration||0;
-            this.getProgress();
-            this.player.ondurationchange = () => {
-                state.fullTime = this.player.duration;
-                this.refresh(this.$store.state.currentAudio);
-            };
-            this.player.onprogress = () => {
-                this.getProgress();
-            };
-            this.player.ontimeupdate = () => {
-                if(!state.timeRating){
-                    state.curTime = this.player.currentTime;
-                }
-            };
-            this.player.onended = () => {
-                this.reset();
-            };
+        ...mapMutations({
+            setCurTime: 'player/SET_CUR_TIME',
+            seek: 'player/TIME_SEEK',
+            changePlayState: 'player/CHANGE_PLAY_STATE',
+            setIndex: 'current/SET_INDEX',
+        }),
 
+        ...mapActions({
+            loadAudio: 'current/LOAD_AUDIO',
+        }),
+
+        next: function () {
+            let current = this.$store.state.current;
+            this.setIndex(++current.index);
+            let aid = current.list.audios[current.index].aid;
+            this.loadAudio(aid);
         },
 
-        load: async function (aid) {
-            await this.loadAudio(aid);
-            this.player.load();
-        },
-
-        refresh: function (audio) {
-            this.audio = {
-                aid: audio.aid,
-                title: audio.title,
-                singer: audio.singer,
-                lyric: audio.lyric,
-                expire: audio.expire,
-            };
-            let disc = audio.disc;
-            this.disc.title = disc.title;
-            this.disc.img = disc.img;
-            this.drawBackImg();
-        },
-
-        next: async function () {
-            this.reset();
-            let list = this.$store.state.currentList;
-            this.indexState(++list.current);
-            let aid = list.audios[list.current].aid;
-            await this.load(aid);
-            this.state.isPlay && this.player.play();
-
-        },
-
-        prev: async function () {
-            this.reset();
-            let list = this.$store.state.currentList;
-            this.indexState(--list.current);
-            let aid = list.audios[list.current].aid;
-            await this.load(aid);
-            this.state.isPlay && this.player.play();
+        prev: function () {
+            let current = this.$store.state.current;
+            this.setIndex(--current.index);
+            let aid = current.list.audios[current.index].aid;
+            this.loadAudio(aid);
         },
 
         play: function () {
-            this.player.play();
-            this.state.isPlay = true;
-            this.playState(true);
+            this.changePlayState();
         },
-        pause: function () {
-            this.player.pause();
-            this.state.isPlay = false;
-            this.playState(false);
-        },
-        reset: function () {
-            let state = this.state;
-//            this.player.pause();
-            this.player.currentTime = 0;
-            state.curTime = 0;
-            state.fullTime = 0;
-            state.progress = 0;
-        },
-        getProgress: function () {
-            let timeRanges = this.player.buffered;
-            if(timeRanges.length<1){
-                return;
-            }
-            this.state.progress = timeRanges.end(0); // audio一般没有分段缓冲,只需计算第一段
-        },
-        secondsToString: (seconds)=>{
-            let cur_time = Math.round(seconds);
-            let cur_minutes = Math.floor(cur_time/60)<10?'0'+Math.floor(cur_time/60).toString():Math.floor(cur_time/60).toString();
-            let cur_seconds = cur_time%60<10?'0'+(cur_time%60).toString():cur_time%60;
-            return cur_minutes+':'+cur_seconds;
-        },
+
         timeChange: function(e){
             e.preventDefault();
             e.stopPropagation();
             if (e.target!==this.$refs.time) {
                 return;
             }
-            this.player.currentTime = (e.clientX-e.target.offsetLeft)/e.target.offsetWidth*this.state.fullTime;
+            let cur = (e.clientX - e.target.offsetLeft) / e.target.offsetWidth * this.fullTime;
+            this.seek();
+            this.setCurTime(cur);
+            this.$nextTick(()=>{
+                this.seek();
+            });
         },
+
         timeSlider: function(e){
             e.preventDefault();
-            let state = this.state;
-            state.timeRating = true;
+            this.seek();
             let handleX = e.offsetX-6;   //修正控制点位置偏差
             let moveHandle = (e)=>{
                 e.preventDefault();
-                let durX = e.clientX-this.$refs.time.offsetLeft-handleX;
+                let cur = e.clientX-this.$refs.time.offsetLeft-handleX;
                 let max = this.$refs.time.offsetWidth;
-                if(durX>max){
-                    durX = max;
-                } else if(durX<0){
-                    durX = 0;
+                if(cur > max){
+                    cur = max;
+                } else if(cur < 0){
+                    cur = 0;
                 }
-                state.curTime = state.fullTime*(durX/max);
+                this.setCurTime(this.fullTime*(cur/max));
             };
             let finishMove = (e)=>{
                 e.preventDefault();
-                state.timeRating = false;
-                this.player.currentTime = state.curTime;
+                this.seek();
                 this.$el.removeEventListener('mousemove',moveHandle);
                 this.$el.removeEventListener('mouseup',finishMove);
             };
             this.$el.addEventListener('mousemove',moveHandle,false);
             this.$el.addEventListener('mouseup',finishMove,false);
         },
+
         timeSliderTouch: function(e){
             e.preventDefault();
             e.stopPropagation();
-            let state = this.state;
-            state.timeRating = true;
+            this.seek();
             let ballX = e.target.offsetLeft+6;  //ball初始圆心
             let originX = e.changedTouches[0].pageX;  //初始控制点位置
             let moveHandle = (e)=>{
@@ -287,13 +216,12 @@ export default {
                 } else if(cur < 0){
                     cur = 0;
                 }
-                state.curTime = state.fullTime*(cur/max);
+                this.setCurTime(this.fullTime*(cur/max));
             };
             let finishMove = (e)=>{
                 e.preventDefault();
                 e.stopPropagation();
-                this.player.currentTime = state.curTime;
-                state.timeRating = false;
+                this.seek();
                 this.$el.removeEventListener('touchmove',moveHandle);
                 this.$el.removeEventListener('touchend',finishMove);
             };
@@ -308,67 +236,25 @@ export default {
                 bg.backImgs[bg.backImgState+1] = img.src;
                 bg.backImgState++;
             };
-            img.src = this.disc.img+'/playerbg';
+            img.src = this.audio.disc.img+'/playerbg';
 
         },
-
-/*  模糊背景 已使用Qiniu图片Api替代
-        drawBackImg: function () {
-            let canvas = document.createElement('canvas');
-            let ctx = canvas.getContext('2d');
-            let win_w = this.$el.clientWidth;
-            let win_h =  this.$el.clientHeight;
-            canvas.width = win_w;
-            canvas.height = win_h;
-            let img = new Image();
-            img.crossOrigin = "Anonymous";
-            img.onload = ()=>{
-
-                let _canvas = document.createElement('canvas');
-                _canvas.width = img.width;
-                _canvas.height = img.height;
-                let _ctx = _canvas.getContext('2d');
-                _ctx.drawImage(img, 0, 0, img.width, img.height);
-                let backImgData = _ctx.getImageData(0, 0, img.width, img.width);
-                // 高斯处理
-                let gaussImgData = gaussBlur(backImgData,20,15);
-                _ctx.clearRect(0, 0, img.width, img.height);
-                _ctx.putImageData(gaussImgData, 0, 0);
-                // smartcrop
-                smartCrop.crop(_canvas, {width: win_w, height: win_h}).then((res)=>{
-                    let crop = res.topCrop;
-                    ctx.drawImage(_canvas, crop.x, crop.y, crop.width, crop.height, 0, 0, win_w, win_h);
-                    ctx.fillStyle = 'hsla(0, 0%, 0%, 0.6)';
-                    ctx.fillRect(0, 0, win_w, win_h);
-                    let bg = this.bg;
-                    let img = new Image();
-                    img.onload = ()=>{
-                        bg.backImgs[bg.backImgState+1] = img.src;
-                        bg.backImgState++;
-                    };
-                    img.src = canvas.toDataURL();
-                });
-
-            };
-            img.src = this.disc.img;
-        },
-*/
 
         darkBack: function () {
             this.bg.hlight = !this.bg.hlight;
         },
 
         changeView: function () {
-            this.curView = (this.curView==='disc')?'lyric':'disc';
+            this.curView = (this.curView === 'disc') ? 'lyric' : 'disc';
         },
 
-        beforeLeave: function () {
-            this.state.discChanging = true;
-        },
-
-        afterLeave: function () {
-            this.state.discChanging = false;
-        },
+//        beforeLeave: function () {
+//            this.state.discChanging = true;
+//        },
+//
+//        afterLeave: function () {
+//            this.state.discChanging = false;
+//        },
 
         back: function () {
             this.$router.go(-1);

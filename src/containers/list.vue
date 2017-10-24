@@ -25,7 +25,7 @@
         </div>
 
 
-        <List :isPlay="isPlay" :audios="list.audios" :playList="play"></List>
+        <List :isCur="isCur" :audios="list.audios" :playList="play"></List>
 
 
     </div>
@@ -35,7 +35,7 @@
 <script>
 import List from '../components/songlist.vue';
 import PlayState from '../components/playstate.vue';
-import { mapMutations,mapActions } from 'vuex';
+import { mapState,mapMutations,mapActions } from 'vuex';
 export default  {
     components: {
         List,PlayState
@@ -44,11 +44,14 @@ export default  {
     data(){
         return {
             list: {},
-            isPlay: false,
+            isCur: false,
         }
     },
 
     computed: {
+        ...mapState({
+            isPlay: state => state.player.isPlay,
+        }),
         bg: function () {
             return (this.list.img && this.list.img+'/headbg');
         },
@@ -59,21 +62,20 @@ export default  {
 
     mounted(){
         this.getList();
-        this.isPlay = (this.list.lid === this.$store.state.currentList.lid);
+        this.isCur = (this.list.lid === this.$store.state.current.list.lid);
     },
 
     
     methods: {
-        ...mapMutations([
-            'playList'
-        ]),
-        ...mapActions([
-            'loadList'
-        ]),
+
+        ...mapActions({
+            playList: 'current/PLAY_LIST',
+            loadList: 'current/LOAD_LIST',
+        }),
 
         getList: async function () {
             if(!this.$route.params.lid){
-                this.list = this.$store.state.cache.lists[0];
+                this.list = this.$store.state.history.lists[0];
             } else {
                 this.list.lid = ~~this.$route.params.lid;
                 this.list = await this.loadList(this.list.lid);
@@ -83,11 +85,10 @@ export default  {
 
         play: function () {
             this.playList(this.list);
-
         },
 
         goPlayer: function () {
-            this.$router.push({ name: 'player' })
+            this.$router.push({ name: 'audio' })
         },
 
         back: function () {

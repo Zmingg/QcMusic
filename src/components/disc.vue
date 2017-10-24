@@ -26,8 +26,10 @@ export default {
         this.img_album = new Image();
         this.img_album.onload = ()=>{
             this.clipAlbumIco();
+            this.drawDisc();
         };
         this.img_album.src = this.img;
+        this.isPlay && this.rotateStart();
     },
 
     destroyed(){
@@ -36,6 +38,7 @@ export default {
 
     watch: {
         isPlay: function () {
+
             if(this.isPlay){
                 this.rotateStart();
             }else{
@@ -48,7 +51,8 @@ export default {
                 this.clipAlbumIco();
             };
             this.img_album.src = this.img;
-        }
+        },
+
     },
 
     methods: {
@@ -129,12 +133,6 @@ export default {
             ctx_al.clip();
             ctx_al.drawImage(this.img_album, 0, 0, r*2, r*2);
             this.clipedAlbum = album;
-        },
-        drawAlbumIco: function () {
-            let ctx = this.ctx;
-            let R = this.R;
-            let r = this.radius*0.68;
-            ctx.drawImage(this.clipedAlbum, R-r, R-r, r*2, r*2);
         },
 
         drawLines: function (ctx) {

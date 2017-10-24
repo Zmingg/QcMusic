@@ -6,8 +6,8 @@
         </div>
         <ul class="list" @click="play">
             <li v-for="(audio,index) in audios" :data-aid="audio.aid" :data-index="index">
-                <div class="left" :class="{ current: isPlay && (index === curIndex) }">
-                    <span v-if="isPlay && (index === curIndex)" class="play-state" :class="{active:$store.state.isPlay}"></span>
+                <div class="left" :class="{ current: isCur && (index === curIndex) }">
+                    <span v-if="isCur && (index === curIndex)" class="play-state" :class="{active:$store.state.player.isPlay}"></span>
                     <span class="play-index" v-else>{{index+1}}</span>
                     <div class="info">
                         <div>
@@ -24,59 +24,41 @@
 </template>
 <script>
 import 'babel-polyfill';
-import { mapMutations,mapActions } from 'vuex';
-import emptyAu from '../assets/media/empty.mp3';
+import { mapState,mapMutations,mapActions } from 'vuex';
 export default{
     props: [
-        'audios','playList','isPlay'
+        'audios','playList','isCur'
     ],
 
-    data(){
-        return {
-            curIndex: -1,
-        }
-    },
-
-    created(){
-        this.curIndex = this.$store.state.currentList.current;
-    },
-
-    mounted(){
-        this.player = document.querySelector('audio');
-        this.player.ondurationchange = ()=>{
-            this.curIndex = this.$store.state.currentList.current;
-        };
-
-    },
-
-    destroyed(){
-        this.player.ondurationchange = null;
+    computed: {
+        ...mapState({
+            isPlay: state => state.player.isPlay,
+            curIndex: state => state.current.index
+        })
     },
 
     methods: {
-        ...mapMutations([
-            'loadList','playState','indexState'
-        ]),
-        ...mapActions([
-            'loadAudio','autoMode'
-        ]),
+        ...mapMutations({
+            setIndex: 'current/SET_INDEX',
+            setPlay: 'player/CHANGE_PLAY_STATE',
+        }),
+        ...mapActions({
+            loadAudio: 'current/LOAD_AUDIO',
+        }),
+
         play: async function (e) {
             if(e.target.tagName==='LI'){
-                this.playList();
                 let index = parseInt(e.target.dataset.index);
                 let aid = parseInt(e.target.dataset.aid);
-                if(this.isPlay && (this.curIndex === index)) {
-                    this.player.play();
+                if(this.isCur && (this.curIndex === index)) {
+                    this.isPlay || this.setPlay();
                 }else{
-                    this.player.src = emptyAu;
-                    this.player.load();
+                    this.$root.$emit('load');
                     await this.loadAudio(aid);
-                    this.player.load();
-                    this.player.play();
+                    this.playList();
                 }
-                this.playState(true);
-                this.indexState(index);
-                this.$router.push({ name: 'player', params: {index:index}})
+                this.setIndex(index);
+                this.$router.push({ name: 'audio', params: {index:index}})
             }
         },
     }

@@ -13,8 +13,8 @@
                 <div class="lyric-bg">
                     <img src="" ref="lyric_bg">
                 </div>
-                <ul class="lyric" ref="lyric">
-                    <li>{{ message }}</li><li v-for="item in lyric">
+                <ul class="lyric" ref="lyric" :style="{ transform:transform }">
+                    <li>{{ message }}</li><li v-for="(item,index) in lyric" :class="{ on:(index===curId) }">
                         {{ item[1] }}
                     </li>
                 </ul>
@@ -26,30 +26,32 @@
 <script>
 import Vue from 'vue';
 import getLyric from '../lib/lyric';
-import gauss from '../lib/gaussBlur';
+import { mapState } from 'vuex';
 export default {
     data(){
         return {
             dpr: window.devicePixelRatio,
             lyric: [],
+            curId: 0,
         }
     },
 
     computed: {
+        ...mapState({
+            curTime: state => state.player.curTime,
+        }),
         message: function () {
             return (this.lyric.length===0)?'无歌词':'';
-        }
+        },
+        transform: function () {
+            return 'translateY('+ (-this.curId * 2.5) + 'rem)';
+        },
     },
 
-    props: ['lyricUrl','backImg','isChanging','darkBack'],
+    props: ['lyricUrl','backImg','darkBack'],
 
     mounted(){
-        this.init();
-    },
-
-    destroyed(){
-        this.player.removeEventListener('timeupdate',this.syncLrc);
-        this.player.removeEventListener('seeked',this.seekLrc);
+        this.getLyricData();
     },
 
     activated: function () {
@@ -64,116 +66,39 @@ export default {
     },
 
     watch: {
-        lyricUrl:function () {
-            if(this.lyricUrl!==''){
-                getLyric(this.lyricUrl,(res)=>{
-                    this.lyric = res;
-                });
-            } else {
-                this.lyric = [];
-            }
-
+        lyricUrl: function () {
+            this.getLyricData();
         },
 
-//        backImg: function () {
-//            let img = new Image();
-//            img.crossOrigin = "anonymous";
-//            img.onload = ()=>{
-//                this.clipShadow(img);
-//            };
-//            img.src = this.backImg;
-//        },
+        curTime: function () {
+            this.syncLrc();
+        },
 
-        isChanging: function () {
-            this.$refs.lyric_bg.style.display =  this.isChanging?'none':'';
-        }
     },
 
     methods: {
-        init: function () {
-            this.player = document.querySelector('audio');
+
+        getLyricData: function () {
             if(this.lyricUrl!==''){
                 getLyric(this.lyricUrl,(res)=>{
                     this.lyric = res;
                 });
             }
-
-//            if(this.backImg!==''){
-//                let img = new Image();
-//                img.crossOrigin = "anonymous";
-//                img.onload = ()=>{
-//                    this.clipShadow(img);
-//                };
-//                img.src = this.backImg;
-//            }
-
-            this.player.addEventListener('timeupdate',this.syncLrc);
-            this.player.addEventListener('seeked',this.seekLrc);
-        },
-
-        clipShadow: function (img) {
-
-            let top = Math.ceil(this.$el.clientHeight*0.1)+50;
-            let width = Math.ceil(this.$refs.lyric_box.clientWidth);
-            let height = Math.ceil(this.$refs.lyric_box.clientHeight)+1;
-            let canvas = document.createElement('canvas');
-            let ctx = canvas.getContext('2d');
-            canvas.width = width;
-            canvas.height = height;
-            let full = document.createElement('canvas');
-            full.width = window.screen.width;
-            full.height = window.screen.height;
-            let _ctx = full.getContext('2d');
-            _ctx.drawImage(img,0,0,window.screen.width,window.screen.height);
-            _ctx.fillStyle = "hsla(0,0%,0%,0.7)";
-            _ctx.fillRect(0,0,window.screen.width,window.screen.height);
-
-            ctx.globalAlpha = 1;
-            for(let i = 0; i<10; i++){
-                ctx.drawImage(full,0,top+i*5,width,5,0,i*5,width,5);
-                ctx.globalAlpha = ctx.globalAlpha-0.1;
-            }
-            ctx.globalAlpha = 1;
-            for(let i = 0; i<10; i++){
-                ctx.drawImage(full,0,height+top-(i+1)*5,width,5,0,height-(i+1)*5,width,5);
-                ctx.globalAlpha = ctx.globalAlpha-0.1;
-            }
-
-
-            this.$refs.lyric_bg.src = canvas.toDataURL();
-
-
         },
 
         syncLrc: function () {
-            if(this.lyric.length===0) return;
-
             let lyric = this.lyric;
+            if(lyric.length===0) return;
             let id = 0;
             for(let i=0;i<lyric.length;i++){
-                if(this.player.currentTime > lyric[i][0]){
+                if(this.curTime > lyric[i][0]){
                     id++;
+                } else {
+                    break;
                 }
             }
-
-            if(id===0) return;
-            let ref_lrc = this.$refs.lyric;
-            let li_h = 2.5;
-            ref_lrc.childNodes[id-1].className = '';
-            ref_lrc.childNodes[id].className = 'on';
-            ref_lrc.style.transform = 'translateY('+(-id*li_h)+'rem)';
+            this.curId = id-1;
         },
-
-        seekLrc: function () {
-            if(this.lyric.length===0) return;
-
-            let ref_lrc = this.$refs.lyric;
-            for(let i = 1; i < ref_lrc.length; i++){
-                ref_lrc.childNodes[i].className = '';
-            }
-        },
-
-
 
     }
 
