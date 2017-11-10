@@ -9,12 +9,11 @@
                 v-for="(audio,index) in audios"
                 :data-aid="audio.aid"
                 :data-index="index">
-                <span v-if="isCur && (index === curIndex)" class="play-state" :class="{active:$store.state.player.isPlay}"></span>
-                <span class="play-index" v-else>{{index+1}}</span>
+                    <span v-if="isCur && (index === curIndex)" class="play-state" :class="{active:$store.state.player.isPlay}"></span>
+                    <span class="play-index" v-else>{{index+1}}</span>
                 <div class="info">
                     <div>
                         <span class="title">{{audio.title}}</span>
-                        <span class="icon-q icon-sq"></span>
                     </div>
                     <a class="txt">{{audio.singer}} - {{audio.disc.title}}</a>
                 </div>
@@ -65,7 +64,7 @@ export default{
     }
 }
 </script>
-<style scoped>
+<style lang="scss" scoped>
 a, li {
     text-decoration: none;
     list-style: none;
@@ -92,20 +91,28 @@ a, li {
     color: #ee0000;
 }
 .play-index {
-    width: 30px;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
     margin-right: 10px;
     color: #777777;
     text-align: center;
 }
 .play-state {
-    width: 30px;
-    height: 30px;
+    $width: 250px;
+    $rat: 20/30;
+    width: 20px;
+    height: 20px;
     margin-right: 10px;
     font-size: 0;
-    background: url(../assets/images/control.png) no-repeat -180px 0;
+    background-image: url(../assets/images/control.png);
+    background-repeat: no-repeat;
+    background-position: #{-180px*$rat} 0;
+    background-size: #{250px*$rat} #{250px*$rat};
 }
 .play-state.active {
-    background: url(../assets/images/control.png) no-repeat -150px 0;
+    $rat: 20/30;
+    background-position: #{-150px*$rat} 0;
 }
 .info {
     flex: 1;

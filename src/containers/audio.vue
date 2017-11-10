@@ -8,12 +8,12 @@
         </div>
 
         <div class="header">
-            <div class="back" @click="back">返回</div>
+            <div class="button" @click="back">返回</div>
             <div class="info">
                 <span class="title">{{ audio.title }}</span>
                 <span class="singer">{{ audio.singer }} - {{ audio.disc.title }}</span>
             </div>
-            <div class="share"></div>
+            <div class="button"></div>
         </div>
 
         <div class="show" @click="changeView">
@@ -336,7 +336,6 @@ img {
 
 .header {
     width: 100%;
-    padding: 0 20px;
     height: 50px;
     display: flex;
     justify-content: space-between;
@@ -346,8 +345,11 @@ img {
     font-weight: lighter;
 }
 
-.share {
+.button {
     width: 50px;
+    height: 50px;
+    line-height: 50px;
+    text-align: center;
 }
 .info {
     margin-top: 0.5rem;
@@ -467,7 +469,7 @@ $rat: 48/72;
 .show {
     flex: 1;
     width: 100%;
-    /*position: relative;*/
+    position: relative;
 }
 
 

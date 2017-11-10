@@ -7,9 +7,7 @@
             </li>
         </ul>
     </div>
-
 </template>
-
 <script>
 import 'babel-polyfill';
 import { apiLists } from '../api/qiniu';
@@ -59,6 +57,7 @@ export default {
 
 }
 .lists {
+    margin-top: 60px;
     width: 100%;
     display: flex;
     flex-direction: row;

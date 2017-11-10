@@ -1,15 +1,13 @@
 <template>
     <div>
-
-        <div ref="head">
+        <div ref="head" class="head">
             <img class="bg" ref="bg" :src="bg"/>
             <div class="navbar">
-                <div class="back" @click="back">返回</div>
-                <div class="nav-title">歌单</div>
-                <div class="play-state" @click="goPlayer">
-                    <PlayState></PlayState>
+                <div class="button" @click="back">返回</div>
+                <div class="nav-title">歌 单</div>
+                <div class="button" @click="goPlayer">
+                    <PlayState class="play-state"></PlayState>
                 </div>
-
             </div>
 
             <div class="album-header">
@@ -24,9 +22,7 @@
             </div>
         </div>
 
-
-        <List :isCur="isCur" :audios="list.audios" :playList="play"></List>
-
+        <List class="list" :isCur="isCur" :audios="list.audios" :playList="play"></List>
 
     </div>
 
@@ -103,38 +99,51 @@ export default  {
     img {
         width: 100%;
     }
-    .bg {
-        position: absolute;
+    .head {
+        position: fixed;
         top: 0;
         left: 0;
+        right: 0;
+        height: 200px;
+    }
+    .bg {
+        position: absolute;
         width: 100%;
-        height: calc(10rem + 50px);;
+        height: 100%;
         z-index: -99;
     }
     .navbar {
         position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
+        width: 100%;
         height: 50px;
-        padding: 0 20px;
         color: #fff;
         font-weight: lighter;
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
+    .button {
+        width: 50px;
+        height: 50px;
+        line-height: 50px;
+        text-align: center;
+    }
+
+    .nav-title {
+        flex: 1;
+        text-align: center;
+    }
 
     .play-state {
-        width: 1.2em;
-        height: 1.2em;
+        margin: 15px 0;
+        width: 20px;
+        height: 20px;
     }
 
     .album-header {
         padding-top: 50px;
         width: 100%;
-        height: 10rem;
+        height: 150px;
         background: hsla(0,0%,30%,0.5);
         display: flex;
         align-items: center;
@@ -167,5 +176,8 @@ export default  {
     .count {
         font-size: 0.8rem;
         align-self: stretch;
+    }
+    .list {
+        margin-top: 200px;
     }
 </style>

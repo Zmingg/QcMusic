@@ -173,7 +173,7 @@ export default {
     }
 }
 </script>
-<style scoped>
+<style lang="scss" scoped>
 * {
     -webkit-tap-highlight-color: transparent;
 }
@@ -211,18 +211,22 @@ li {
     align-items: center;
 }
 .search-icon {
+    $width: 15px;
+    $rat: $width/20px;
     margin-left: 10px;
-    width: 20px;
-    height: 20px;
-    background: url(../assets/images/control.png) no-repeat -150px -30px;
-    background-size: 250px 250px;
+    width: $width;
+    height: $width;
+    background: url(../assets/images/control.png) no-repeat -150px*$rat -30px*$rat;
+    background-size: 250px*$rat 250px*$rat;
 }
 .clear-icon {
+    $width: 15px;
+    $rat: $width/20px;
     margin-right: 10px;
-    width: 20px;
-    height: 20px;
-    background: url(../assets/images/control.png) no-repeat -170px -30px;
-    background-size: 250px 250px;
+    width: $width;
+    height: $width;
+    background: url(../assets/images/control.png) no-repeat -170px*$rat -30px*$rat;
+    background-size: 250px*$rat 250px*$rat;
 }
 .search-input {
     border: none;
