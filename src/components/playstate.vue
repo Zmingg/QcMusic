@@ -1,13 +1,17 @@
 <template>
     <svg viewBox="0 0 80 80" >
-        <line :class="{paused:!isPlay}" x1="10" y1="80" x2="10" y2="0" ></line>
-        <line :class="{paused:!isPlay}" x1="40" y1="80" x2="40" y2="0" ></line>
-        <line :class="{paused:!isPlay}" x1="70" y1="80" x2="70" y2="0" ></line>
+        <line :class="{paused:!isPlay}" x1="10" y1="80" x2="10" y2="0" :style="{stroke: color}"></line>
+        <line :class="{paused:!isPlay}" x1="40" y1="80" x2="40" y2="0" :style="{stroke: color}" ></line>
+        <line :class="{paused:!isPlay}" x1="70" y1="80" x2="70" y2="0" :style="{stroke: color}" ></line>
     </svg>
 </template>
 
 <script>
 export default {
+
+    props: [
+       'color'
+    ],
 
     computed: {
         isPlay: function () {

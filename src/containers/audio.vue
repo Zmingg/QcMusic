@@ -1,5 +1,5 @@
 <template>
-    <div class="main">
+    <div class="fixed">
         <div class="bg_shadow" :class="{hlight:bg.hlight}"></div>
         <div class="bg_img" ref="bg">
             <transition name="fade" >
@@ -49,6 +49,8 @@
                 <span class="next" @click="next"></span>
             </div>
         </div>
+
+
     </div>
 </template>
 <script>
@@ -269,10 +271,12 @@ img {
     width: 100%;
     height: 100%;
 }
-.main {
+.fixed {
     width: 100%;
     height: 100%;
     position: fixed;
+    display: flex;
+    flex-direction: column;
     -webkit-tap-highlight-color: transparent;
 }
 .bg_shadow {
@@ -364,7 +368,6 @@ img {
     height: 1rem;
 }
 .controls {
-    position: absolute;
     bottom: 0;
     width: 100%;
     height: 98px;
@@ -433,37 +436,38 @@ img {
     justify-content: space-around;
     align-items: center;
 }
+$full: 250px;
+$w1: 48px;
+$rat: 48/72;
 .play {
-    width: 48px;
-    height: 48px;
-    border-radius: 24px;
+    width: $w1;
+    height: $w1;
     background: url(../assets/images/control.png) no-repeat 0 0 ;
-    background-size: 133px 133px;
+    background-size: #{$full*$rat} #{$full*$rat};
 }
 .pause {
-    width: 48px;
-    height: 48px;
-    border-radius: 24px;
-    background: url(../assets/images/control.png) no-repeat -48px 0 ;
-    background-size: 133px 133px;
+    width: $w1;
+    height: $w1;
+    background: url(../assets/images/control.png) no-repeat #{-$w1} 0 ;
+    background-size: #{$full*$rat} #{$full*$rat};
 }
 .prev {
-    width: 48px;
-    height: 48px;
-    background: url(../assets/images/control.png) no-repeat 0 -54px;
-    background-size: 150px 150px;
+    width: 64px*$rat;
+    height: 64px*$rat;
+    background: url(../assets/images/control.png) no-repeat 0 #{-$w1};
+    background-size: #{$full*$rat} #{$full*$rat};
 }
 .next {
-    width: 48px;
-    height: 48px;
-    background: url(../assets/images/control.png) no-repeat -48px -54px;
-    background-size: 150px 150px;
+    width: 64px*$rat;
+    height: 64px*$rat;
+    background: url(../assets/images/control.png) no-repeat #{-64px*$rat} #{-$w1};
+    background-size: #{$full*$rat} #{$full*$rat};
 }
 
 .show {
-    height: calc(100% - 150px);
+    flex: 1;
     width: 100%;
-    position: relative;
+    /*position: relative;*/
 }
 
 

@@ -39,5 +39,25 @@ const apiAudio = async (aid)=>{
     }
 };
 
+const apiHotKey = async () => {
+    try {
+        let res = await fetch(baseUrl+'mapi/keys');
+        let data =  await res.json();
+        return { ok:true,data:data };
+    } catch(err) {
+        return { ok:false,err:err };
+    }
+};
 
-export { apiLists,apiList,apiAudio } ;
+const apiSearch = async (key) => {
+    try {
+        let res = await fetch(baseUrl + 'mapi/search/' + key);
+        let data =  await res.json();
+        return { ok:true,data:data };
+    } catch(err) {
+        return { ok:false,err:err };
+    }
+};
+
+
+export { apiLists,apiList,apiAudio,apiHotKey,apiSearch } ;

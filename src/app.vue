@@ -3,7 +3,7 @@
         <ul class="nav" :class="{hidden:isHidden}">
             <li><router-link to="/">QcPlayer</router-link></li>
             <li><router-link to="/cates">歌单</router-link></li>
-            <!--<li><router-link to="/singers">歌手</router-link></li>-->
+            <li><router-link to="/search">搜索</router-link></li>
             <!--<li><router-link to="/rank">排行</router-link></li>-->
             <!--<li><router-link to="/search">搜索</router-link></li>-->
         </ul>
@@ -30,16 +30,14 @@ export default {
 
     computed: {
         isHidden: function(){
-            let route = this.$route.name
-            if(route==='audio'||route==='list'){
+            let route = this.$route.name;
+            if(route==='home'||route==='cates'){
+
+            } else {
                 return true;
             }
         }
     },
-
-
-
-
 
 }
 

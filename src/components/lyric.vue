@@ -1,25 +1,11 @@
 <template>
-    <div style="
-    position: absolute;
-    top: 0;
-    bottom:0;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;">
-        <div class="main">
-            <div class="lyric-box" ref="lyric_box">
-                <div class="lyric-bg">
-                    <img src="" ref="lyric_bg">
-                </div>
-                <ul class="lyric" ref="lyric" :style="{ transform:transform }">
-                    <li>{{ message }}</li><li v-for="(item,index) in lyric" :class="{ on:(index===curId) }">
-                        {{ item[1] }}
-                    </li>
-                </ul>
-            </div>
-
+    <div class="main">
+        <div class="lyric-box" ref="lyric_box">
+            <ul class="lyric" ref="lyric" :style="{ transform:transform }">
+                <li>{{ message }}</li><li v-for="(item,index) in lyric" :class="{ on:(index===curId) }">
+                    {{ item[1] }}
+                </li>
+            </ul>
         </div>
     </div>
 </template>
@@ -48,7 +34,7 @@ export default {
         },
     },
 
-    props: ['lyricUrl','backImg','darkBack'],
+    props: ['lyricUrl','darkBack'],
 
     mounted(){
         this.getLyricData();
@@ -57,11 +43,9 @@ export default {
     activated: function () {
         this.darkBack();
         this.syncLrc();
-        this.$refs.lyric_bg.style.opacity = 1;
     },
 
     deactivated: function () {
-        this.$refs.lyric_bg.style.opacity = 0;
         this.darkBack();
     },
 
@@ -106,13 +90,16 @@ export default {
 </script>
 <style lang="scss" scoped>
 .main {
-    height: 80%;
+    height: 100%;
     width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .lyric-box {
     width: 100%;
-    height: 100%;
+    height: 80%;
     overflow: hidden;
     position: relative;
 }
@@ -122,10 +109,6 @@ export default {
     height:100%;
     position: absolute;
     z-index: 1;
-
-    img {
-        transition: 0.3s;
-    }
 
 }
 

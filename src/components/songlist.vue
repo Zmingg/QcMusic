@@ -5,17 +5,18 @@
             播放全部
         </div>
         <ul class="list" @click="play">
-            <li v-for="(audio,index) in audios" :data-aid="audio.aid" :data-index="index">
-                <div class="left" :class="{ current: isCur && (index === curIndex) }">
-                    <span v-if="isCur && (index === curIndex)" class="play-state" :class="{active:$store.state.player.isPlay}"></span>
-                    <span class="play-index" v-else>{{index+1}}</span>
-                    <div class="info">
-                        <div>
-                            <span class="title">{{audio.title}}</span>
-                            <span class="icon-q icon-sq"></span>
-                        </div>
-                        <a class="txt">{{audio.singer}} - {{audio.disc.title}}</a>
+            <li :class="{ current: isCur && (index === curIndex)}"
+                v-for="(audio,index) in audios"
+                :data-aid="audio.aid"
+                :data-index="index">
+                <span v-if="isCur && (index === curIndex)" class="play-state" :class="{active:$store.state.player.isPlay}"></span>
+                <span class="play-index" v-else>{{index+1}}</span>
+                <div class="info">
+                    <div>
+                        <span class="title">{{audio.title}}</span>
+                        <span class="icon-q icon-sq"></span>
                     </div>
+                    <a class="txt">{{audio.singer}} - {{audio.disc.title}}</a>
                 </div>
             </li>
         </ul>
@@ -79,44 +80,40 @@ a, li {
     border-bottom: 1px solid #eee;
 }
 .list li {
+    width: 88%;
     height: 3.5rem;
     border-bottom: 1px solid #eee;
-}
-.left {
-    width: 88%;
-    height: 100%;
-    color: #000;
+    color: #3a3a3a;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    pointer-events: none;
 }
-.current {
+.list li.current {
     color: #ee0000;
 }
 .play-index {
-    width: 28px;
-    min-width: 28px;
-    margin-right: 2%;
+    width: 30px;
+    margin-right: 10px;
     color: #777777;
     text-align: center;
 }
 .play-state {
-    width: 28px;
-    min-width: 28px;
-    height: 20px;
-    margin-right: 2%;
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
     font-size: 0;
-    background: url(../assets/images/control.png) no-repeat -30px -180px;
+    background: url(../assets/images/control.png) no-repeat -180px 0;
 }
-.active {
-    background: url(../assets/images/control.png) no-repeat 0 -180px;
+.play-state.active {
+    background: url(../assets/images/control.png) no-repeat -150px 0;
 }
 .info {
-    width: 93%;
+    flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    overflow: hidden;
+    pointer-events: none;
 }
 .title {
     display: inline-block;

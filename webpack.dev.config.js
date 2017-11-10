@@ -95,6 +95,7 @@ const config = {
         //         warnings: false
         //     }
         // }),
+        new webpack.HotModuleReplacementPlugin()
     ],
     devServer: {
         contentBase: path.join(__dirname, "dist"),
@@ -102,6 +103,8 @@ const config = {
         compress: true,
         port: 8725,
         host:  '0.0.0.0',
+        hot: true,
+        hotOnly: true
     }
 };
 
