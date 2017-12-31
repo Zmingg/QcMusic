@@ -12,7 +12,7 @@
             <div class="cancel" @click="cancle">{{(!isSearching)?'返回':'取消'}}</div>
         </div>
         <div class="hot" v-show="isSearching || result.length===0" @click="searchHot">
-            <span class="hot-key" v-for="key in hotKeys" :data-key="key">{{ key }}</span>
+            <span class="hot-key" v-for="key in hotKeys" :data-key="key.name">{{ key.name }}</span>
         </div>
         <ul class="history" v-show="isSearching || result.length===0"  @click="searchHistory">
             <li v-if="historyKeys.length===0">
@@ -29,7 +29,7 @@
                     <div class="item-detail">
                         <span class="item-title">{{ item.title }}</span>
                         <span class="item-info">
-                            {{ item.singer && item.singer.name }} - {{ secToDate(item.release_time) }}
+                            {{ item.singer && item.singer }} - {{ secToDate(item.release_time) }}
                         </span>
                     </div>
                 </div>
@@ -38,11 +38,11 @@
                     <div class="item-detail">
                         <span class="item-title">{{ item.name }}</span>
                         <span class="item-info">
-                            专辑数：{{ item.discs_count }}张 &nbsp&nbsp&nbsp&nbsp  歌曲数：{{ item.audios_count }}首
+                            专辑数：{{ item.disc_count }}张 &nbsp&nbsp&nbsp&nbsp  歌曲数：{{ item.audio_count }}首
                         </span>
                     </div>
                 </div>
-                <div class="item" v-else-if="item.type==='audio'" @click="click(item)">
+                <div class="item" v-else @click="click(item)">
                     <PlayState class="play-state"
                                :color="'red'"
                                v-if="isPlay && curAid === item.aid">
@@ -52,7 +52,7 @@
                             {{ item.title }}
                         </span>
                         <span class="item-info">
-                            {{ item.singer }} - {{ item.disc && item.disc.title }}
+                            {{ item.singer }} - {{ item.disc && item.disc }}
                         </span>
                     </div>
                 </div>
@@ -252,6 +252,7 @@ input[type="search"]:focus{
     line-height: normal;
 }
 .hot {
+    padding: 0 10px;
     overflow: hidden;
     font-size: 16px;
 }
@@ -262,7 +263,8 @@ input[type="search"]:focus{
     height: 36px;
     line-height: 36px;
     float: left;
-    margin: 10px 0 0 10px;
+    margin-top: 10px;
+    margin-right: 10px;
     border: 1px solid #C5E8FA;
     background-color: #EEF9FF;
 }

@@ -11,7 +11,7 @@
             <div class="button" @click="back">返回</div>
             <div class="info">
                 <span class="title">{{ audio.title }}</span>
-                <span class="singer">{{ audio.singer }} - {{ audio.disc.title }}</span>
+                <span class="singer">{{ audio.singer }} - {{ audio.disc }}</span>
             </div>
             <div class="button"></div>
         </div>
@@ -96,8 +96,8 @@ export default {
 
         discImgUrl: function () {
             let ver = this.$store.state.version;
-            return this.audio.disc.img !== ''
-                ? this.audio.disc.img + '/thumbnail?v=qc' + ver
+            return this.audio.disc_img !== ''
+                ? this.audio.disc_img + '/thumbnail?v=qc' + ver
                 : '';
         },
 
@@ -238,7 +238,7 @@ export default {
                 bg.backImgs[bg.backImgState+1] = img.src;
                 bg.backImgState++;
             };
-            img.src = this.audio.disc.img+'/playerbg';
+            img.src = this.audio.disc_img+'/playerbg';
 
         },
 

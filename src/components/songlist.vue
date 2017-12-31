@@ -15,7 +15,7 @@
                     <div>
                         <span class="title">{{audio.title}}</span>
                     </div>
-                    <a class="txt">{{audio.singer}} - {{audio.disc.title}}</a>
+                    <a class="txt">{{audio.singer}} - {{audio.disc}}</a>
                 </div>
             </li>
         </ul>
