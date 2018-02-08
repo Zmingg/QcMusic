@@ -22,6 +22,16 @@ const apiList = async (lid)=>{
     }
 };
 
+const apiHotAudios = async ()=>{
+    try {
+        let res = await fetch(baseUrl + 'audios/hot');
+        let data =  await res.json();
+        return { ok:true, data:data };
+    } catch(err) {
+        return { ok:false, err:err };
+    }
+};
+
 const apiAudio = async (aid)=>{
     try {
         let res = await fetch(baseUrl + 'audio/' + aid);
@@ -53,4 +63,4 @@ const apiSearch = async (key) => {
 };
 
 
-export { apiLists,apiList,apiAudio,apiHotKey,apiSearch } ;
+export { apiLists,apiList,apiHotAudios,apiAudio,apiHotKey,apiSearch } ;

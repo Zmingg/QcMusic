@@ -1,7 +1,7 @@
 <template>
     <div :data-dpr="dpr">
         <header :class="{hidden:isHidden}">
-            <span class="logo"><router-link to="/">QcPlayer</router-link></span>
+            <span class="logo"><router-link to="/">清尘音乐</router-link></span>
             <ul class="nav">
                 <li><router-link to="/cates">歌单</router-link></li>
                 <li><router-link to="/search">搜索</router-link></li>
@@ -9,6 +9,8 @@
         </header>
 
         <router-view></router-view>
+
+        <footer>清尘音乐 天籁无垠</footer>
 
         <Player></Player>
 
@@ -55,12 +57,19 @@ header {
     right: 0;
     display: flex;
     align-items: center;
-    background: #ffffff;
+    background: #f32642;
+    z-index: 999;
+}
+
+header a {
+    color: #ffffff;
 }
 
 .logo {
     width: 100px;
     text-align: center;
+    font-style: italic;
+    font-weight: bold;
 }
 
 .nav {
@@ -77,5 +86,12 @@ header {
 .hidden {
     display: none;
 }
-
+footer {
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: lighter;
+    color: #c3c3c3;
+}
 </style>
