@@ -57,27 +57,21 @@ export default  {
     },
 
     mounted(){
-        this.getList();
         this.isCur = (this.list.lid === this.$store.state.current.list.lid);
     },
 
-    
+    beforeRouteEnter (to, from, next) {
+        next(async vm =>
+            vm.list = await vm.loadList(~~to.params.lid)
+        );
+    },
+
     methods: {
 
         ...mapActions({
             playList: 'current/PLAY_LIST',
             loadList: 'current/LOAD_LIST',
         }),
-
-        getList: async function () {
-            if(!this.$route.params.lid){
-                this.list = this.$store.state.history.lists[0];
-            } else {
-                this.list.lid = ~~this.$route.params.lid;
-                this.list = await this.loadList(this.list.lid);
-            }
-
-        },
 
         play: function () {
             this.playList(this.list);

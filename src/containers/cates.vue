@@ -11,23 +11,14 @@
                 </li>
             </ul>
         </section>
-        <section>
-            <div class="title">
-                热门单曲
-            </div>
-            <ul class="hot-audios">
-                <li v-for="audio in hotAudios" :data-aid="audio.aid">
-                    <div class="audio-title">{{ audio.title }}</div>
-                    <div class="audio-meta">{{ audio.singer }} - {{ audio.disc }}</div>
-                </li>
-            </ul>
-        </section>
+
     </main>
 </template>
 <script>
 import 'babel-polyfill';
 import { apiLists, apiHotAudios } from '../api/qiniu';
-import { mapActions } from 'vuex';
+import { mapState, mapMutations, mapActions } from 'vuex';
+import PlayState from '../components/playstate.vue';
 export default {
     data(){
         return {
@@ -36,35 +27,46 @@ export default {
         }
     },
 
+    components: {
+        PlayState
+    },
+
+    computed: {
+        ...mapState({
+            isPlay: state => state.player.isPlay,
+            curAudio: state => state.current.audio
+        })
+    },
     
     mounted(){
         this.getLists();
-        this.getHotAudios();
     },
     
     methods: {
+        ...mapMutations({
+            setPlay: 'player/CHANGE_PLAY_STATE',
+        }),
+        ...mapActions({
+            loadAudio: 'current/LOAD_AUDIO',
+            playSingleAudio: 'current/PLAY_SINGLE_AUDIO',
+        }),
 
         getLists: async function () {
             let res = await apiLists();
             if(res.ok){
                 this.lists = res.data;
+
             }
         },
 
         goList: function (e) {
             if(e.target.tagName==='LI'){
                 let lid = e.target.dataset.lid;
-                this.$router.push({ name: 'list', params: {lid:lid}})
+                this.$router.push({ path: 'list/'+lid});
             }
 
         },
 
-        getHotAudios: async function () {
-            let res = await apiHotAudios();
-            if(res.ok){
-                this.hotAudios = res.data;
-            }
-        },
 
         
         
@@ -92,15 +94,17 @@ section > .title {
     font-size: 16px;
     padding-left: 15px;
 }
+
 section > .title::after {
     content: '';
     position: absolute;
-    left: 0;
     top: 10px;
+    left: 0;
     height: 20px;
     width: 3px;
-    background-color: #ff3c2d;
+    background: #ff0000;
 }
+
 section > .lists {
     margin-top: 5px;
     display: flex;
@@ -146,19 +150,46 @@ section > .lists {
 }
 .hot-audios > li {
     height: 50px;
+    width: 100%;
+    line-height: 50px;
     border-bottom: solid 1px #e3e3e3;
-}
-.audio-title {
     position: relative;
-    top: 5px;
+    overflow: hidden;
+    white-space: nowrap;
+    display: flex;
+}
+.play-icon {
+    margin-right: 5px;
+    font-size: 15px;
+    font-weight: bold;
+    /*pointer-events: none;*/
+}
+
+.audio-meta {
+    margin-top: 5px;
+    height: 40px;
+    pointer-events: none;
+    white-space: nowrap;
+    flex: 1;
+}
+.audio-meta > .title {
+    display: block;
     height: 20px;
+    line-height: 20px;
     font-size: 15px;
 }
-.audio-meta {
-    position: relative;
-    top: 5px;
+.audio-meta > .other {
+    display: block;
     height: 20px;
+    line-height: 20px;
     font-size: 10px;
     color: #6e6e6e;
+    margin-right: -50px;
+}
+.play-state {
+    margin-top: 17px;
+    margin-right: 10px;
+    width: 20px;
+    height: 16px;
 }
 </style>

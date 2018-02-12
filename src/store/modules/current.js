@@ -54,7 +54,17 @@ export default {
         SET_CUR_AUDIO: ( state, audio ) => {
             state.audio = audio;
         },
-
+        RESET_CUSTOM_LIST: ( state ) => {
+            state.list = {
+                lid: 0,
+                title:'默认播放列表',
+                audios:[],
+                count: 0,
+            };
+        },
+        UPDATE_CUSTOM_LIST: ( state, audio ) => {
+            state.list.audios.push(audio);
+        }
 
     },
 
@@ -76,6 +86,12 @@ export default {
         PLAY_LIST:  ( { commit }, list ) => {
             commit('SET_CUR_LIST', list);
 
+        },
+        PLAY_SINGLE_AUDIO: ( { commit, state }, audio) => {
+            if (state.list.lid !== 0) {
+                commit('RESET_CUSTOM_LIST');
+            }
+            commit('UPDATE_CUSTOM_LIST', audio);
         },
         LOAD_AUDIO: async ({ commit, rootState }, aid) => {
             let time = (new Date()).getTime()/1000;

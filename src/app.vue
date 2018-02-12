@@ -3,6 +3,7 @@
         <header :class="{hidden:isHidden}">
             <span class="logo"><router-link to="/">清尘音乐</router-link></span>
             <ul class="nav">
+                <li><router-link to="/">推荐</router-link></li>
                 <li><router-link to="/cates">歌单</router-link></li>
                 <li><router-link to="/search">搜索</router-link></li>
             </ul>

@@ -9,10 +9,10 @@ import Audio from './containers/audio.vue';
 export default new VueRouter({
     mode:'history',
     routes:[
-        { name: 'home', path: '/', component: Cates },
+        { name: 'home', path: '/', component: Home },
         { name: 'cates', path: '/cates', component: Cates },
         { name: 'search', path: '/search', component: Search },
-        { name: 'list', path: '/list', component: List },
+        { name: 'list', path: '/list/:lid', component: List },
         { name: 'audio', path: '/player', component: Audio },
 
     ]

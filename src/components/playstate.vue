@@ -45,7 +45,7 @@ export default {
         stroke: rgb(255, 255, 255);
         stroke-width: 20;
         stroke-dashoffset: 0;
-        animation: lineMove 1s ease-out infinite;
+        animation: lineMove 1s linear infinite;
     }
 
     line:nth-child(1) {

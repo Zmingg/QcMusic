@@ -56,7 +56,6 @@
 <script>
 import gaussBlur from '../lib/gaussBlur';
 import smartCrop from '../lib/smartcrop';
-//import Disc from '../components/disc.vue';
 import Lyric from '../components/lyric.vue';
 import { mapState,mapGetters,mapMutations,mapActions } from 'vuex';
 import defaultBg from '../assets/images/disc_default.jpg';
@@ -73,7 +72,7 @@ export default {
                 discChanging: false,
             },
             bg: {
-                backImgState: 0,
+                backImgNum: 0,
                 backImgs: [],
                 hlight: true,
             },
@@ -97,12 +96,12 @@ export default {
         discImgUrl: function () {
             let ver = this.$store.state.version;
             return this.audio.disc_img !== ''
-                ? this.audio.disc_img + '/thumbnail?v=qc' + ver
+                ? this.audio.disc_img + '/thumbnail?v=' + ver
                 : '';
         },
 
         backImgUrl: function () {
-            return this.bg.backImgs[this.bg.backImgState];
+            return this.bg.backImgs[this.bg.backImgNum];
         },
 
         playRate: function () {
@@ -129,6 +128,7 @@ export default {
         if(this.$store.state.current.audio.aid){
             this.drawBackImg();
         }
+        console.log(this.bg.backImgs)
     },
 
     methods: {
@@ -235,8 +235,9 @@ export default {
             let bg = this.bg;
             let img = new Image();
             img.onload = ()=>{
-                bg.backImgs[bg.backImgState+1] = img.src;
-                bg.backImgState++;
+                bg.backImgs[bg.backImgNum+1] = img.src;
+                bg.backImgNum++;
+                img.onload = null;
             };
             img.src = this.audio.disc_img+'/playerbg';
 

@@ -5,11 +5,11 @@
             播放全部
         </div>
         <ul class="list" @click="play">
-            <li :class="{ current: isCur && (index === curIndex)}"
+            <li :class="{ current: audio.aid === curAid}"
                 v-for="(audio,index) in audios"
                 :data-aid="audio.aid"
                 :data-index="index">
-                    <span v-if="isCur && (index === curIndex)" class="play-state" :class="{active:$store.state.player.isPlay}"></span>
+                    <span v-if="audio.aid === curAid" class="play-state" :class="{active:$store.state.player.isPlay}"></span>
                     <span class="play-index" v-else>{{index+1}}</span>
                 <div class="info">
                     <div>
@@ -33,9 +33,10 @@ export default{
     computed: {
         ...mapState({
             isPlay: state => state.player.isPlay,
-            curIndex: state => state.current.index
+            curAid: state => state.current.audio.aid
         })
     },
+
 
     methods: {
         ...mapMutations({
