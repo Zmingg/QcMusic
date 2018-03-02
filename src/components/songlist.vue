@@ -51,7 +51,7 @@ export default{
             if(e.target.tagName==='LI'){
                 let index = parseInt(e.target.dataset.index);
                 let aid = parseInt(e.target.dataset.aid);
-                if(this.isCur && (this.curIndex === index)) {
+                if(this.curAid === aid) {
                     this.isPlay || this.setPlay();
                 }else{
                     this.$root.$emit('load');

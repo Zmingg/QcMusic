@@ -22,7 +22,7 @@
             </div>
         </div>
 
-        <List class="list" :isCur="isCur" :audios="list.audios" :playList="play"></List>
+        <List class="list" :audios="list.audios" :playList="play"></List>
 
     </div>
 
@@ -50,21 +50,15 @@ export default  {
             isPlay: state => state.player.isPlay,
         }),
         bg: function () {
-            return (this.list.img && domain + this.list.img+'/headbg');
+            return (this.list.img && domain + this.list.img + '/headbg');
         },
         thumb: function () {
             return (this.list.img && domain + this.list.img+'/thumb?v=' + this.$store.state.version);
         }
     },
 
-    mounted(){
-        this.isCur = (this.list.lid === this.$store.state.current.list.lid);
-    },
-
-    beforeRouteEnter (to, from, next) {
-        next(async vm =>
-            vm.list = await vm.loadList(~~to.params.lid)
-        );
+    created(){
+        this.getList();
     },
 
     methods: {
@@ -84,7 +78,12 @@ export default  {
 
         back: function () {
             this.$router.go(-1);
+        },
+
+        async getList() {
+            this.list = await this.loadList(this.$route.params.lid);
         }
+
     }
 
 
