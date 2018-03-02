@@ -3,3 +3,5 @@
 node_modules/
 src/resources/
 dist/
+dist/app.js
+dist/vendor.js
