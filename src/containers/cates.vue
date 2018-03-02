@@ -6,7 +6,7 @@
             </div>
             <ul class="lists" @click="goList">
                 <li v-for="list in lists" :data-lid="list.lid">
-                    <img :src="list.img + '/thumbnail?v=' + $store.state.version" />
+                    <img :src="list.img | url"/>
                     <a>{{ list.title }}</a>
                 </li>
             </ul>
@@ -16,7 +16,7 @@
 </template>
 <script>
 import 'babel-polyfill';
-import { apiLists, apiHotAudios } from '../api/qiniu';
+import { domain, apiLists, apiHotAudios } from '../api/qiniu';
 import { mapState, mapMutations, mapActions } from 'vuex';
 import PlayState from '../components/playstate.vue';
 export default {
@@ -29,6 +29,13 @@ export default {
 
     components: {
         PlayState
+    },
+
+    filters: {
+        url: function (value, version) {
+            if (!value) return '';
+            return  domain + value + '/thumbnail?v=' + version;
+        }
     },
 
     computed: {
