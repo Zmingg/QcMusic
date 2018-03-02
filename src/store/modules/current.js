@@ -30,7 +30,6 @@ export default {
         },
 
         index: -1,
-        mode: 0,
 
     },
 
@@ -108,30 +107,8 @@ export default {
                 commit('history/UPDATE_AUDIO_HISTORY', audio,  { root: true });
             }
 
-        },
-        AUTO_NEXT: async ({ commit,dispatch,state }) => {
-            let audios = state.list.audios;
-            let total = audios.length;
-            let index = state.index;
-            switch (state.mode){
-                case 1:   // 单曲循环
-                    break;
-                case 2:   // 随机播放
-                    let randomIndex = Math.floor(Math.random()*total);
-                    commit('SET_INDEX', randomIndex);
-                    break;
-                default:  // 列表循环
-                    if(index<total-1){
-                        commit('SET_INDEX', ++index);
-                    } else {
-                        commit('SET_INDEX', 0);
-                    }
-                    break;
-            }
-            let nextAid = audios[state.index].aid;
-
-            await dispatch('LOAD_AUDIO', nextAid);
         }
+
 
 
     }

@@ -13,6 +13,9 @@ export default{
             src: state => state.current.audio.src || emptyAudio,
             isPlay: state => state.player.isPlay,
             isSeeking: state => state.player.isSeeking,
+            audios: state => state.current.list.audios,
+            index: state => state.current.index,
+            mode: state => state.player.mode
         }),
     },
 
@@ -52,9 +55,11 @@ export default{
             setFullTime: 'player/SET_FULL_TIME',
             setCurTime: 'player/SET_CUR_TIME',
             changePlayState: 'player/CHANGE_PLAY_STATE',
+            setIndex: 'current/SET_INDEX',
+            setMode: 'player/SET_MODE'
         }),
         ...mapActions({
-            autoNext: 'current/AUTO_NEXT',
+            loadAudio: 'current/LOAD_AUDIO',
         }),
 
         duration: function () {
@@ -66,13 +71,38 @@ export default{
             if ( timeRanges.length < 1 ){
                 return;
             }
-            this.setProgress(timeRanges.end(0)); // audio一般没有分段缓冲,只需计算第一段
+            this.setProgress(timeRanges.end(timeRanges.length-1)); // 最后一段的结束点
         },
 
         timeUpdate: function () {
             if ( !this.isSeeking ) {
                 this.setCurTime(this.$refs.player.currentTime);
             }
+        },
+
+        async next () {
+            let total = this.audios.length;
+            if (total===1) {
+                this.setMode(1);
+            }
+            switch (this.mode){
+                case 1:   // 单曲循环
+                    this.play();
+                    break;
+                case 2:   // 随机播放
+                    let randomIndex = Math.floor(Math.random()*total);
+                    this.setIndex(randomIndex);
+                    break;
+                default:  // 列表循环
+                    if(this.index<total-1){
+                        this.setIndex(++this.index);
+                    } else {
+                        this.setIndex(0);
+                    }
+                    break;
+            }
+            let nextAid = this.audios[this.index].aid;
+            await this.loadAudio(nextAid);
         },
 
         load: function () {
@@ -85,10 +115,6 @@ export default{
 
         pause: function () {
             this.$refs.player.pause();
-        },
-
-        next: function () {
-            this.autoNext();
         },
 
     }

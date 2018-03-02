@@ -7,6 +7,7 @@ export default {
         progress: 0,
         isPlay: false,
         isSeeking: false,
+        mode: 0
     },
 
     getters: {
@@ -30,6 +31,9 @@ export default {
         CHANGE_PLAY_STATE: ( state ) => {
             state.isPlay = !state.isPlay;
         },
+        SET_MODE: ( state, mode ) => {
+            state.mode = mode;
+        }
 
     }
 
