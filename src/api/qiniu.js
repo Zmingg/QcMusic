@@ -34,10 +34,14 @@ const apiAudio = async (aid)=>{
     try {
         let res = await fetch(baseUrl + 'audio/' + aid);
         res =  await res.json();
-        let urlRes = await fetch(baseUrl + 'audio/url/' + res.data.src);
+        let fd = new FormData();
+        fd.append('key', res.data.src);
+        let urlRes = await fetch(baseUrl + 'audio/url', {
+            method: 'put',
+            body: fd
+        });
         urlRes = await urlRes.json();
         Object.assign(res.data, urlRes.data);
-
         return res;
     } catch(err) {
         return { ok:false, err:err };
