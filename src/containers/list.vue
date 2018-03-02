@@ -31,6 +31,7 @@
 <script>
 import List from '../components/songlist.vue';
 import PlayState from '../components/playstate.vue';
+import { domain } from '../api/qiniu';
 import { mapState,mapMutations,mapActions } from 'vuex';
 export default  {
     components: {
@@ -49,10 +50,10 @@ export default  {
             isPlay: state => state.player.isPlay,
         }),
         bg: function () {
-            return (this.list.img && this.list.img+'/headbg');
+            return (this.list.img && domain + this.list.img+'/headbg');
         },
         thumb: function () {
-            return (this.list.img && this.list.img+'/thumb?v=' + this.$store.state.version);
+            return (this.list.img && domain + this.list.img+'/thumb?v=' + this.$store.state.version);
         }
     },
 

@@ -60,6 +60,7 @@ import Lyric from '../components/lyric.vue';
 import { mapState,mapGetters,mapMutations,mapActions } from 'vuex';
 import defaultBg from '../assets/images/disc_default.jpg';
 import Disc from '../components/disc.vue';
+import { domain } from '../api/qiniu';
 export default {
     components: {
         Disc, Lyric
@@ -96,7 +97,7 @@ export default {
         discImgUrl: function () {
             let ver = this.$store.state.version;
             return this.audio.disc_img !== ''
-                ? this.audio.disc_img + '/thumbnail?v=' + ver
+                ? domain + this.audio.disc_img + '/thumbnail?v=' + ver
                 : '';
         },
 
@@ -128,7 +129,6 @@ export default {
         if(this.$store.state.current.audio.aid){
             this.drawBackImg();
         }
-        console.log(this.bg.backImgs)
     },
 
     methods: {
@@ -239,7 +239,7 @@ export default {
                 bg.backImgNum++;
                 img.onload = null;
             };
-            img.src = this.audio.disc_img+'/playerbg';
+            img.src = domain + this.audio.disc_img+'/playerbg';
 
         },
 

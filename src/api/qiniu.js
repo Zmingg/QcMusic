@@ -1,12 +1,12 @@
 import 'babel-polyfill';
 const baseUrl = 'http://127.0.0.1:3001/';
-
+// const baseUrl = 'http://music.zmingg.com/api/';
+const domain = 'http://oxjyut4f0.bkt.clouddn.com/';
 
 const apiLists = async ()=>{
     try {
         let res = await fetch(baseUrl+'lists');
-        let data =  await res.json();
-        return { ok:true,data:data };
+        return await res.json();
     } catch(err) {
         return { ok:false,err:err };
     }
@@ -15,8 +15,7 @@ const apiLists = async ()=>{
 const apiList = async (lid)=>{
     try {
         let res = await fetch(baseUrl + 'list/' + lid);
-        let data =  await res.json();
-        return { ok:true,data:data };
+        return await res.json();
     } catch(err) {
         return { ok:false,err:err };
     }
@@ -25,8 +24,7 @@ const apiList = async (lid)=>{
 const apiHotAudios = async ()=>{
     try {
         let res = await fetch(baseUrl + 'audios/hot');
-        let data =  await res.json();
-        return { ok:true, data:data };
+        return await res.json();
     } catch(err) {
         return { ok:false, err:err };
     }
@@ -35,8 +33,12 @@ const apiHotAudios = async ()=>{
 const apiAudio = async (aid)=>{
     try {
         let res = await fetch(baseUrl + 'audio/' + aid);
-        let data =  await res.json();
-        return { ok:true, data:data };
+        res =  await res.json();
+        let urlRes = await fetch(baseUrl + 'audio/url/' + res.data.src);
+        urlRes = await urlRes.json();
+        Object.assign(res.data, urlRes.data);
+
+        return res;
     } catch(err) {
         return { ok:false, err:err };
     }
@@ -45,8 +47,7 @@ const apiAudio = async (aid)=>{
 const apiHotKey = async () => {
     try {
         let res = await fetch(baseUrl+'hot_keys');
-        let data =  await res.json();
-        return { ok:true,data:data };
+        return await res.json();
     } catch(err) {
         return { ok:false,err:err };
     }
@@ -55,12 +56,11 @@ const apiHotKey = async () => {
 const apiSearch = async (key) => {
     try {
         let res = await fetch(baseUrl + 'search/' + key);
-        let data =  await res.json();
-        return { ok:true,data:data };
+        return await res.json();
     } catch(err) {
         return { ok:false,err:err };
     }
 };
 
 
-export { apiLists,apiList,apiHotAudios,apiAudio,apiHotKey,apiSearch } ;
+export { domain, apiLists, apiList, apiHotAudios, apiAudio, apiHotKey, apiSearch } ;

@@ -83,7 +83,7 @@ const config = {
     },
     plugins:[
         new webpack.DefinePlugin({
-            PRODUCTION: JSON.stringify(false),
+            PRODUCTION: JSON.stringify(true),
         }),
         new webpack.optimize.CommonsChunkPlugin({
             names: ['vendor'],
@@ -94,14 +94,7 @@ const config = {
                 warnings: false
             }
         }),
-    ],
-    devServer: {
-        contentBase: path.join(__dirname, "dist"),
-        // publicPath: 'http://127.0.0.1:8725/music/',
-        compress: true,
-        port: 8725,
-        host:  '0.0.0.0',
-    }
+    ]
 };
 
 module.exports = config;
