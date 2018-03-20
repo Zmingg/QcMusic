@@ -11,7 +11,10 @@
 
         <router-view></router-view>
 
-        <footer>清尘音乐 天籁无垠</footer>
+        <footer>
+            <span>清尘音乐 天籁无垠</span>
+            <span class="copyright">仅供学习 非商业用途</span>
+        </footer>
 
         <Player></Player>
 
@@ -88,11 +91,17 @@ header a {
     display: none;
 }
 footer {
-    height: 30px;
-    line-height: 30px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+footer span{
+    display: block;
     text-align: center;
-    font-size: 13px;
+    font-size: 0.8rem;
     font-weight: lighter;
     color: #c3c3c3;
+}
+.copyright {
+    font-size: 0.4rem;
 }
 </style>
