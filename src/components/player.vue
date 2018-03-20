@@ -95,7 +95,7 @@ export default{
                     break;
                 default:  // 列表循环
                     if(this.index<total-1){
-                        this.setIndex(++this.index);
+                        this.setIndex(this.index + 1);
                     } else {
                         this.setIndex(0);
                     }
