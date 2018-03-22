@@ -11,7 +11,7 @@
 
         <router-view></router-view>
 
-        <footer>
+        <footer :class="{hidden:isHidden}">
             <span>清尘音乐 天籁无垠</span>
             <span class="copyright">仅供学习 非商业用途</span>
         </footer>
