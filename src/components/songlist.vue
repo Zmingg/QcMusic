@@ -56,8 +56,8 @@ export default{
                 }else{
                     this.$root.$emit('load');
                     await this.loadAudio(aid);
-                    this.playList();
                 }
+                this.playList();
                 this.setIndex(index);
                 this.$router.push({ name: 'audio', params: {index:index}})
             }
