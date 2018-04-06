@@ -9,13 +9,20 @@
                 v-for="(audio,index) in audios"
                 :data-aid="audio.aid"
                 :data-index="index">
-                    <span v-if="audio.aid === curAid" class="play-state" :class="{active:$store.state.player.isPlay}"></span>
+                    <span v-if="audio.aid === curAid" class="play-state"
+                          :class="{active:$store.state.player.isPlay}">
+                    </span>
+
                     <span class="play-index" v-else>{{index+1}}</span>
                 <div class="info">
-                    <div>
-                        <span class="title">{{audio.title}}</span>
+                    <div class="info-up">
+                        <span>{{audio.title}}</span>
                     </div>
-                    <a class="txt">{{audio.singer}} - {{audio.disc}}</a>
+                    <div class="info-down">
+                        <span v-if="audio.hq" class="hq">HQ</span>
+                        <a class="txt">{{audio.singer}} - {{audio.disc}}</a>
+                    </div>
+
                 </div>
             </li>
         </ul>
@@ -81,7 +88,7 @@ a, li {
 }
 .list li {
     width: 88%;
-    height: 3.5rem;
+    height: 3.2rem;
     border-bottom: 1px solid #eee;
     color: #3a3a3a;
     display: flex;
@@ -123,16 +130,33 @@ a, li {
     overflow: hidden;
     pointer-events: none;
 }
-.title {
+.info-up {
     display: inline-block;
-    height: 1.2rem;
-    line-height: 1.2rem;
+    height: 1.2em;
+    line-height: 1.2em;
     font-size: 1rem;
+}
+.info-down {
+    height: 1.2em;
+    line-height: 1.2em;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+}
+.hq {
+    width: 20px;
+    height: 1em;
+    line-height: 1em;
+    color: #ff0000;
+    font-size: 0.6rem;
+    text-align: center;
+    border: solid 0.1em #ff0000;
+    margin-right: 10px;
 }
 .txt {
     display: inline-block;
-    height: 1rem;
-    line-height: 1rem;
+    height: 1.2rem;
+    line-height: 1.2rem;
     font-size: 0.8rem;
     color: #777777;
     overflow: hidden;
