@@ -217,16 +217,16 @@
     }
     .audio-meta > .title {
         display: block;
-        height: 20px;
-        line-height: 20px;
-        font-size: 15px;
+        height: 1.2em;
+        line-height: 1.2em;
+        font-size: 1rem;
     }
     .audio-meta > .other {
         display: block;
-        height: 20px;
-        line-height: 20px;
-        font-size: 10px;
-        color: #6e6e6e;
+        height: 1.2rem;
+        line-height: 1.2rem;
+        font-size: 0.8rem;
+        color: #777777;
         margin-right: -50px;
     }
     .play-state {
