@@ -3,7 +3,8 @@ const getLyric = (url,callback) => {
     request.open('GET', url, true);
     request.responseType = 'text';
     request.onload = function() {
-        callback(makeLrcArr(request.response));
+        callback(request.status === 200 ? makeLrcArr(request.response) : []);
+
     };
     request.send();
 };
